@@ -18,17 +18,18 @@ func NewUserService(repo *repositories.UserRepository) *UserService {
 }
 
 func (s *UserService) Create(req dto.CreateUserRequest) (*models.User, error) {
-	hashedPw, err := utils.HashPassword(req.Password)
+	hashedPin, err := utils.HashPassword(req.Pin)
 	if err != nil {
 		return nil, err
 	}
 
 	user := &models.User{
-		Name:     req.Name,
-		Email:    req.Email,
-		Password: hashedPw,
-		Role:     req.Role,
-		BranchID: req.BranchID,
+		EmployeeID:  req.EmployeeID,
+		Name:        req.Name,
+		PhoneNumber: req.PhoneNumber,
+		Pin:         hashedPin,
+		Role:        req.Role,
+		BranchID:    req.BranchID,
 	}
 	if err := s.repo.Create(user); err != nil {
 		return nil, err
@@ -49,11 +50,21 @@ func (s *UserService) Update(id uuid.UUID, req dto.UpdateUserRequest) (*models.U
 	if err != nil {
 		return nil, err
 	}
+	if req.EmployeeID != nil {
+		user.EmployeeID = *req.EmployeeID
+	}
 	if req.Name != nil {
 		user.Name = *req.Name
 	}
-	if req.Email != nil {
-		user.Email = *req.Email
+	if req.PhoneNumber != nil {
+		user.PhoneNumber = *req.PhoneNumber
+	}
+	if req.Pin != nil {
+		hashedPin, err := utils.HashPassword(*req.Pin)
+		if err != nil {
+			return nil, err
+		}
+		user.Pin = hashedPin
 	}
 	if req.Role != nil {
 		user.Role = *req.Role
@@ -70,3 +81,4 @@ func (s *UserService) Update(id uuid.UUID, req dto.UpdateUserRequest) (*models.U
 func (s *UserService) Delete(id uuid.UUID) error {
 	return s.repo.Delete(id)
 }
+

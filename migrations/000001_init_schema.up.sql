@@ -21,9 +21,10 @@ CREATE INDEX idx_branches_deleted_at ON branches(deleted_at);
 -- 2. Users
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    employee_id VARCHAR(255) NOT NULL UNIQUE,
     name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
+    phone_number VARCHAR(50) NOT NULL UNIQUE,
+    pin VARCHAR(255) NOT NULL,
     role VARCHAR(20) NOT NULL CHECK (role IN ('ADMIN', 'MANAGER', 'CASHIER')),
     branch_id UUID NOT NULL REFERENCES branches(id),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

@@ -22,16 +22,16 @@ func NewAuthService(userRepo *repositories.UserRepository, jwtSecret string, jwt
 }
 
 func (s *AuthService) Login(req dto.LoginRequest) (*dto.LoginResponse, error) {
-	user, err := s.userRepo.FindByEmail(req.Email)
+	user, err := s.userRepo.FindByPhone(req.PhoneNumber)
 	if err != nil {
-		return nil, errors.New("invalid email or password")
+		return nil, errors.New("invalid phone number or pin")
 	}
 
-	if !utils.CheckPassword(req.Password, user.Password) {
-		return nil, errors.New("invalid email or password")
+	if !utils.CheckPassword(req.Pin, user.Pin) {
+		return nil, errors.New("invalid phone number or pin")
 	}
 
-	token, err := utils.GenerateToken(user.ID, user.Email, user.Role, user.BranchID, s.jwtSecret, s.jwtExpiry)
+	token, err := utils.GenerateToken(user.ID, user.EmployeeID, user.PhoneNumber, user.Role, user.BranchID, s.jwtSecret, s.jwtExpiry)
 	if err != nil {
 		return nil, errors.New("failed to generate token")
 	}
@@ -39,11 +39,13 @@ func (s *AuthService) Login(req dto.LoginRequest) (*dto.LoginResponse, error) {
 	return &dto.LoginResponse{
 		Token: token,
 		User: dto.UserResponse{
-			ID:       user.ID,
-			Name:     user.Name,
-			Email:    user.Email,
-			Role:     user.Role,
-			BranchID: user.BranchID,
+			ID:          user.ID,
+			EmployeeID:  user.EmployeeID,
+			Name:        user.Name,
+			PhoneNumber: user.PhoneNumber,
+			Role:        user.Role,
+			BranchID:    user.BranchID,
 		},
 	}, nil
 }
+

@@ -36,9 +36,9 @@ func (r *UserRepository) FindByID(id uuid.UUID) (*models.User, error) {
 	return &user, nil
 }
 
-func (r *UserRepository) FindByEmail(email string) (*models.User, error) {
+func (r *UserRepository) FindByPhone(phoneNumber string) (*models.User, error) {
 	var user models.User
-	err := r.db.Preload("Branch").First(&user, "email = ?", email).Error
+	err := r.db.Preload("Branch").First(&user, "phone_number = ?", phoneNumber).Error
 	if err != nil {
 		return nil, err
 	}
@@ -52,3 +52,4 @@ func (r *UserRepository) Update(user *models.User) error {
 func (r *UserRepository) Delete(id uuid.UUID) error {
 	return r.db.Delete(&models.User{}, "id = ?", id).Error
 }
+

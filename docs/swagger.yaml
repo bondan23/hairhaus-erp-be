@@ -1333,15 +1333,14 @@ components:
     # ---- Auth ----
     LoginRequest:
       type: object
-      required: [email, password]
+      required: [phone_number, pin]
       properties:
-        email:
+        phone_number:
           type: string
-          format: email
-          example: "admin@hairhaus.com"
-        password:
+          example: "081234567890"
+        pin:
           type: string
-          example: "password123"
+          example: "1234"
 
     LoginResponse:
       type: object
@@ -1358,9 +1357,12 @@ components:
         id:
           type: string
           format: uuid
+        employee_id:
+          type: string
+          description: HAIRHAUS Loyalty ID
         name:
           type: string
-        email:
+        phone_number:
           type: string
         role:
           type: string
@@ -1425,17 +1427,22 @@ components:
     # ---- User ----
     CreateUserRequest:
       type: object
-      required: [name, email, password, role, branch_id]
+      required: [employee_id, name, phone_number, pin, role, branch_id]
       properties:
+        employee_id:
+          type: string
+          description: HAIRHAUS Loyalty ID (manually input)
+          example: "EMP-001"
         name:
           type: string
           example: "John Doe"
-        email:
+        phone_number:
           type: string
-          format: email
-        password:
+          example: "081234567890"
+        pin:
           type: string
-          minLength: 6
+          minLength: 4
+          example: "1234"
         role:
           type: string
           enum: [ADMIN, MANAGER, CASHIER]
@@ -1446,10 +1453,15 @@ components:
     UpdateUserRequest:
       type: object
       properties:
+        employee_id:
+          type: string
         name:
           type: string
-        email:
+        phone_number:
           type: string
+        pin:
+          type: string
+          minLength: 4
         role:
           type: string
           enum: [ADMIN, MANAGER, CASHIER]

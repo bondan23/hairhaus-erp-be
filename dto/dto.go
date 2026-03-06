@@ -4,12 +4,12 @@ import "github.com/google/uuid"
 
 // ===== Auth =====
 type LoginRequest struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required"`
+	PhoneNumber string `json:"phone_number" binding:"required"`
+	Pin         string `json:"pin" binding:"required"`
 }
 
 type LoginResponse struct {
-	Token string      `json:"token"`
+	Token string       `json:"token"`
 	User  UserResponse `json:"user"`
 }
 
@@ -30,26 +30,30 @@ type UpdateBranchRequest struct {
 
 // ===== User =====
 type CreateUserRequest struct {
-	Name     string    `json:"name" binding:"required"`
-	Email    string    `json:"email" binding:"required,email"`
-	Password string    `json:"password" binding:"required,min=6"`
-	Role     string    `json:"role" binding:"required,oneof=ADMIN MANAGER CASHIER"`
-	BranchID uuid.UUID `json:"branch_id" binding:"required"`
+	EmployeeID  string    `json:"employee_id" binding:"required"`
+	Name        string    `json:"name" binding:"required"`
+	PhoneNumber string    `json:"phone_number" binding:"required"`
+	Pin         string    `json:"pin" binding:"required,min=4"`
+	Role        string    `json:"role" binding:"required,oneof=ADMIN MANAGER CASHIER"`
+	BranchID    uuid.UUID `json:"branch_id" binding:"required"`
 }
 
 type UpdateUserRequest struct {
-	Name     *string    `json:"name"`
-	Email    *string    `json:"email"`
-	Role     *string    `json:"role"`
-	BranchID *uuid.UUID `json:"branch_id"`
+	EmployeeID  *string    `json:"employee_id"`
+	Name        *string    `json:"name"`
+	PhoneNumber *string    `json:"phone_number"`
+	Pin         *string    `json:"pin"`
+	Role        *string    `json:"role"`
+	BranchID    *uuid.UUID `json:"branch_id"`
 }
 
 type UserResponse struct {
-	ID       uuid.UUID `json:"id"`
-	Name     string    `json:"name"`
-	Email    string    `json:"email"`
-	Role     string    `json:"role"`
-	BranchID uuid.UUID `json:"branch_id"`
+	ID          uuid.UUID `json:"id"`
+	EmployeeID  string    `json:"employee_id"`
+	Name        string    `json:"name"`
+	PhoneNumber string    `json:"phone_number"`
+	Role        string    `json:"role"`
+	BranchID    uuid.UUID `json:"branch_id"`
 }
 
 // ===== Product Category =====
