@@ -145,13 +145,25 @@ func (s *TransactionService) Checkout(req dto.CheckoutRequest, userID uuid.UUID)
 			// Commission snapshot (for services with stylist)
 			var commissionAmount int64
 			if product.ProductType == models.ProductTypeService && itemReq.StylistID != nil {
+				// Base commissionable amount defaults to the gross subtotal
+				commissionableAmount := grossSubtotal
+
+				// Deduct cost price if it's a treatment and has a valid cost price
+				if incomeType == models.IncomeTypeTreatment && product.CostPrice > 0 {
+					itemMargin := price - product.CostPrice
+					if itemMargin < 0 {
+						itemMargin = 0 // Bounds check to prevent negative commission
+					}
+					commissionableAmount = itemMargin * itemReq.Quantity
+				}
+
 				// Default commission rate
 				commissionRate := 40
 				bs, bsErr := s.bsRepo.FindByBranchAndStylist(req.BranchID, *itemReq.StylistID)
 				if bsErr == nil && bs.CommissionPercentage != nil {
 					commissionRate = *bs.CommissionPercentage
 				}
-				commissionAmount = grossSubtotal * int64(commissionRate) / 100
+				commissionAmount = commissionableAmount * int64(commissionRate) / 100
 			}
 
 			item := models.TransactionItem{
