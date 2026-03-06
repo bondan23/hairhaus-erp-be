@@ -21,6 +21,7 @@ func (s *BranchStylistService) Create(req dto.CreateBranchStylistRequest) (*mode
 		BranchID:             req.BranchID,
 		StylistID:            req.StylistID,
 		HaircutPriceOverride: req.HaircutPriceOverride,
+		CommissionPercentage: req.CommissionPercentage,
 	}
 	if err := s.repo.Create(bs); err != nil {
 		return nil, err
@@ -43,6 +44,9 @@ func (s *BranchStylistService) Update(id uuid.UUID, req dto.UpdateBranchStylistR
 	}
 	if req.HaircutPriceOverride != nil {
 		bs.HaircutPriceOverride = req.HaircutPriceOverride
+	}
+	if req.CommissionPercentage != nil {
+		bs.CommissionPercentage = req.CommissionPercentage
 	}
 	if err := s.repo.Update(bs); err != nil {
 		return nil, err

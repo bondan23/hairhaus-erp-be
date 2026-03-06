@@ -9,6 +9,7 @@ type BranchStylist struct {
 	StylistID uuid.UUID `gorm:"type:uuid;not null;uniqueIndex:idx_branch_stylist" json:"stylist_id"`
 
 	HaircutPriceOverride *int64 `json:"haircut_price_override"`
+	CommissionPercentage *int   `json:"commission_percentage"`
 
 	Branch  Branch  `gorm:"foreignKey:BranchID" json:"branch,omitempty"`
 	Stylist Stylist `gorm:"foreignKey:StylistID" json:"stylist,omitempty"`

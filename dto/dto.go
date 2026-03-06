@@ -115,10 +115,12 @@ type CreateBranchStylistRequest struct {
 	BranchID             uuid.UUID `json:"branch_id" binding:"required"`
 	StylistID            uuid.UUID `json:"stylist_id" binding:"required"`
 	HaircutPriceOverride *int64    `json:"haircut_price_override"`
+	CommissionPercentage *int      `json:"commission_percentage"`
 }
 
 type UpdateBranchStylistRequest struct {
 	HaircutPriceOverride *int64 `json:"haircut_price_override"`
+	CommissionPercentage *int   `json:"commission_percentage"`
 }
 
 // ===== Customer =====

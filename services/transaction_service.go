@@ -145,8 +145,13 @@ func (s *TransactionService) Checkout(req dto.CheckoutRequest, userID uuid.UUID)
 			// Commission snapshot (for services with stylist)
 			var commissionAmount int64
 			if product.ProductType == models.ProductTypeService && itemReq.StylistID != nil {
-				// Default commission: 30% of gross subtotal for services
-				commissionAmount = grossSubtotal * 30 / 100
+				// Default commission rate
+				commissionRate := 40
+				bs, bsErr := s.bsRepo.FindByBranchAndStylist(req.BranchID, *itemReq.StylistID)
+				if bsErr == nil && bs.CommissionPercentage != nil {
+					commissionRate = *bs.CommissionPercentage
+				}
+				commissionAmount = grossSubtotal * int64(commissionRate) / 100
 			}
 
 			item := models.TransactionItem{
