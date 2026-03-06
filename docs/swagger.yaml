@@ -1,0 +1,2100 @@
+openapi: 3.0.3
+info:
+  title: HAIRHAUS ERP API
+  description: |
+    Enterprise Resource Planning API for multi-branch barbershop operations.
+    Covers POS transactions, cash drawer management, inventory control,
+    affiliate system, salary generation, expense management, and financial reporting.
+  version: 1.0.0
+  contact:
+    name: HAIRHAUS Engineering
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local development
+
+tags:
+  - name: Auth
+    description: Authentication
+  - name: Branches
+    description: Branch management
+  - name: Users
+    description: User management (Admin only)
+  - name: Product Categories
+    description: Product category management
+  - name: Products
+    description: Product and service catalog
+  - name: Stylists
+    description: Stylist / hair maker management
+  - name: Branch Products
+    description: Branch-level product pricing & stock
+  - name: Branch Stylists
+    description: Branch-level stylist assignment & pricing
+  - name: Customers
+    description: Customer management
+  - name: Cash Drawers
+    description: Cash drawer lifecycle management
+  - name: Transactions
+    description: POS checkout, edit, void
+  - name: Inventory
+    description: Stock restock, adjustment, movements
+  - name: Affiliates
+    description: Affiliate / referral management
+  - name: Salaries
+    description: Stylist salary generation
+  - name: Expense Categories
+    description: Expense category management
+  - name: Expenses
+    description: Operational expense management
+  - name: Reports
+    description: Financial reporting
+
+security:
+  - BearerAuth: []
+
+paths:
+  # ==================== AUTH ====================
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - properties:
+                      data:
+                        $ref: '#/components/schemas/LoginResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ==================== BRANCHES ====================
+  /branches:
+    get:
+      tags: [Branches]
+      summary: List all branches
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Paginated list of branches
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Branch'
+    post:
+      tags: [Branches]
+      summary: Create a branch
+      description: "**Roles:** ADMIN"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBranchRequest'
+      responses:
+        '201':
+          description: Branch created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - properties:
+                      data:
+                        $ref: '#/components/schemas/Branch'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /branches/{id}:
+    get:
+      tags: [Branches]
+      summary: Get branch by ID
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      responses:
+        '200':
+          description: Branch details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - properties:
+                      data:
+                        $ref: '#/components/schemas/Branch'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Branches]
+      summary: Update a branch
+      description: "**Roles:** ADMIN"
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBranchRequest'
+      responses:
+        '200':
+          description: Branch updated
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Branches]
+      summary: Delete a branch
+      description: "**Roles:** ADMIN"
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      responses:
+        '200':
+          description: Branch deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /branches/{id}/products:
+    get:
+      tags: [Branches]
+      summary: List products for a branch
+      parameters:
+        - $ref: '#/components/parameters/ID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Branch products with pricing and stock
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/BranchProduct'
+
+  /branches/{id}/stylists:
+    get:
+      tags: [Branches]
+      summary: List stylists for a branch
+      parameters:
+        - $ref: '#/components/parameters/ID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Branch stylists with pricing
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/BranchStylist'
+
+  /branches/{id}/drawers:
+    get:
+      tags: [Branches]
+      summary: List cash drawers for a branch
+      parameters:
+        - $ref: '#/components/parameters/ID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Cash drawer history
+
+  /branches/{id}/drawers/open:
+    get:
+      tags: [Branches]
+      summary: Get currently open drawer for a branch
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      responses:
+        '200':
+          description: Open drawer details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - properties:
+                      data:
+                        $ref: '#/components/schemas/CashDrawer'
+        '404':
+          description: No open drawer found
+
+  /branches/{id}/transactions:
+    get:
+      tags: [Branches]
+      summary: List transactions for a branch
+      parameters:
+        - $ref: '#/components/parameters/ID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Paginated transactions
+
+  /branches/{id}/expenses:
+    get:
+      tags: [Branches]
+      summary: List expenses for a branch
+      parameters:
+        - $ref: '#/components/parameters/ID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Paginated expenses
+
+  /branches/{id}/salaries:
+    get:
+      tags: [Branches]
+      summary: List salary records for a branch
+      parameters:
+        - $ref: '#/components/parameters/ID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Paginated salary records
+
+  # ==================== USERS ====================
+  /users:
+    get:
+      tags: [Users]
+      summary: List all users
+      description: "**Roles:** ADMIN"
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Paginated list of users
+    post:
+      tags: [Users]
+      summary: Create a user
+      description: "**Roles:** ADMIN"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: User created
+
+  /users/{id}:
+    get:
+      tags: [Users]
+      summary: Get user by ID
+      description: "**Roles:** ADMIN"
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      responses:
+        '200':
+          description: User details
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Users]
+      summary: Update a user
+      description: "**Roles:** ADMIN"
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: User updated
+    delete:
+      tags: [Users]
+      summary: Delete a user
+      description: "**Roles:** ADMIN"
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      responses:
+        '200':
+          description: User deleted
+
+  # ==================== PRODUCT CATEGORIES ====================
+  /product-categories:
+    get:
+      tags: [Product Categories]
+      summary: List all product categories
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Paginated categories
+    post:
+      tags: [Product Categories]
+      summary: Create a product category
+      description: "**Roles:** ADMIN"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProductCategoryRequest'
+      responses:
+        '201':
+          description: Category created
+
+  /product-categories/{id}:
+    get:
+      tags: [Product Categories]
+      summary: Get category by ID
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      responses:
+        '200':
+          description: Category details
+    put:
+      tags: [Product Categories]
+      summary: Update a category
+      description: "**Roles:** ADMIN"
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProductCategoryRequest'
+      responses:
+        '200':
+          description: Category updated
+    delete:
+      tags: [Product Categories]
+      summary: Delete a category
+      description: "**Roles:** ADMIN"
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      responses:
+        '200':
+          description: Category deleted
+
+  # ==================== PRODUCTS ====================
+  /products:
+    get:
+      tags: [Products]
+      summary: List all products
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Paginated products
+    post:
+      tags: [Products]
+      summary: Create a product
+      description: "**Roles:** ADMIN"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProductRequest'
+      responses:
+        '201':
+          description: Product created
+
+  /products/{id}:
+    get:
+      tags: [Products]
+      summary: Get product by ID
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      responses:
+        '200':
+          description: Product details
+    put:
+      tags: [Products]
+      summary: Update a product
+      description: "**Roles:** ADMIN"
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProductRequest'
+      responses:
+        '200':
+          description: Product updated
+    delete:
+      tags: [Products]
+      summary: Delete a product
+      description: "**Roles:** ADMIN"
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      responses:
+        '200':
+          description: Product deleted
+
+  # ==================== STYLISTS ====================
+  /stylists:
+    get:
+      tags: [Stylists]
+      summary: List all stylists
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Paginated stylists
+    post:
+      tags: [Stylists]
+      summary: Create a stylist
+      description: "**Roles:** ADMIN"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateStylistRequest'
+      responses:
+        '201':
+          description: Stylist created
+
+  /stylists/{id}:
+    get:
+      tags: [Stylists]
+      summary: Get stylist by ID
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      responses:
+        '200':
+          description: Stylist details
+    put:
+      tags: [Stylists]
+      summary: Update a stylist
+      description: "**Roles:** ADMIN"
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateStylistRequest'
+      responses:
+        '200':
+          description: Stylist updated
+    delete:
+      tags: [Stylists]
+      summary: Delete a stylist
+      description: "**Roles:** ADMIN"
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      responses:
+        '200':
+          description: Stylist deleted
+
+  # ==================== BRANCH PRODUCTS ====================
+  /branch-products:
+    post:
+      tags: [Branch Products]
+      summary: Assign product to branch with optional price override
+      description: "**Roles:** ADMIN, MANAGER"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBranchProductRequest'
+      responses:
+        '201':
+          description: Branch product created
+
+  /branch-products/{id}:
+    get:
+      tags: [Branch Products]
+      summary: Get branch product by ID
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      responses:
+        '200':
+          description: Branch product details
+    put:
+      tags: [Branch Products]
+      summary: Update branch product price override
+      description: "**Roles:** ADMIN, MANAGER"
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBranchProductRequest'
+      responses:
+        '200':
+          description: Branch product updated
+    delete:
+      tags: [Branch Products]
+      summary: Remove product from branch
+      description: "**Roles:** ADMIN, MANAGER"
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      responses:
+        '200':
+          description: Branch product deleted
+
+  # ==================== BRANCH STYLISTS ====================
+  /branch-stylists:
+    post:
+      tags: [Branch Stylists]
+      summary: Assign stylist to branch with optional haircut price override
+      description: "**Roles:** ADMIN, MANAGER"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBranchStylistRequest'
+      responses:
+        '201':
+          description: Branch stylist created
+
+  /branch-stylists/{id}:
+    get:
+      tags: [Branch Stylists]
+      summary: Get branch stylist by ID
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      responses:
+        '200':
+          description: Branch stylist details
+    put:
+      tags: [Branch Stylists]
+      summary: Update stylist haircut price override
+      description: "**Roles:** ADMIN, MANAGER"
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBranchStylistRequest'
+      responses:
+        '200':
+          description: Branch stylist updated
+    delete:
+      tags: [Branch Stylists]
+      summary: Remove stylist from branch
+      description: "**Roles:** ADMIN, MANAGER"
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      responses:
+        '200':
+          description: Branch stylist deleted
+
+  # ==================== CUSTOMERS ====================
+  /customers:
+    get:
+      tags: [Customers]
+      summary: List all customers
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Paginated customers
+    post:
+      tags: [Customers]
+      summary: Create a customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCustomerRequest'
+      responses:
+        '201':
+          description: Customer created
+
+  /customers/{id}:
+    get:
+      tags: [Customers]
+      summary: Get customer by ID
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      responses:
+        '200':
+          description: Customer details
+    put:
+      tags: [Customers]
+      summary: Update a customer
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCustomerRequest'
+      responses:
+        '200':
+          description: Customer updated
+    delete:
+      tags: [Customers]
+      summary: Delete a customer
+      description: "**Roles:** ADMIN, MANAGER"
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      responses:
+        '200':
+          description: Customer deleted
+
+  # ==================== CASH DRAWERS ====================
+  /drawers/open:
+    post:
+      tags: [Cash Drawers]
+      summary: Open a cash drawer
+      description: |
+        Opens a new cash drawer for a branch. Only one drawer can be open per branch at a time.
+        **Roles:** ADMIN, MANAGER
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenDrawerRequest'
+      responses:
+        '201':
+          description: Drawer opened
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - properties:
+                      data:
+                        $ref: '#/components/schemas/CashDrawer'
+        '409':
+          description: An open drawer already exists for this branch
+
+  /drawers/{id}:
+    get:
+      tags: [Cash Drawers]
+      summary: Get drawer by ID
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      responses:
+        '200':
+          description: Drawer details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - properties:
+                      data:
+                        $ref: '#/components/schemas/CashDrawer'
+
+  /drawers/{id}/close:
+    post:
+      tags: [Cash Drawers]
+      summary: Close a cash drawer
+      description: |
+        Closes the drawer by calculating expected cash, recording counted cash, and computing the variance.
+        Creates a closing snapshot JSON and an audit log.
+        **Roles:** ADMIN, MANAGER
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CloseDrawerRequest'
+      responses:
+        '200':
+          description: Drawer closed with snapshot
+        '400':
+          description: Drawer is not open
+
+  # ==================== TRANSACTIONS ====================
+  /transactions/checkout:
+    post:
+      tags: [Transactions]
+      summary: POS Checkout
+      description: |
+        Performs an atomic checkout transaction:
+        - Creates transaction with snapshot fields
+        - Creates transaction items with financial snapshots
+        - Processes split payments
+        - Deducts inventory (RETAIL products) with row-level locking
+        - Creates stock movement records
+        - Calculates affiliate commission if code provided
+        - Supports idempotency keys to prevent duplicates
+
+        **Roles:** ADMIN, MANAGER, CASHIER
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckoutRequest'
+      responses:
+        '201':
+          description: Transaction completed
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - properties:
+                      data:
+                        $ref: '#/components/schemas/Transaction'
+        '400':
+          description: Validation error, insufficient stock, or payment mismatch
+
+  /transactions/{id}:
+    get:
+      tags: [Transactions]
+      summary: Get transaction by ID
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      responses:
+        '200':
+          description: Transaction with items and payments
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - properties:
+                      data:
+                        $ref: '#/components/schemas/Transaction'
+    put:
+      tags: [Transactions]
+      summary: Edit a transaction
+      description: |
+        Edit transaction discount. Only allowed when the associated cash drawer is OPEN.
+        Creates an audit log.
+        **Roles:** ADMIN, MANAGER
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditTransactionRequest'
+      responses:
+        '200':
+          description: Transaction updated
+        '400':
+          description: Drawer is not open
+
+  /transactions/{id}/void:
+    post:
+      tags: [Transactions]
+      summary: Void a transaction
+      description: |
+        Voids a completed transaction. Only allowed when drawer is OPEN. Creates audit log.
+        **Roles:** ADMIN, MANAGER
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+                  example: "Customer requested refund"
+      responses:
+        '200':
+          description: Transaction voided
+        '400':
+          description: Drawer is not open
+
+  # ==================== INVENTORY ====================
+  /inventory/restock:
+    post:
+      tags: [Inventory]
+      summary: Restock a product
+      description: |
+        Adds stock to a branch product and creates a RESTOCK stock movement record.
+        **Roles:** ADMIN, MANAGER
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RestockRequest'
+      responses:
+        '200':
+          description: Stock restocked
+
+  /inventory/adjust:
+    post:
+      tags: [Inventory]
+      summary: Adjust stock
+      description: |
+        Adjusts stock (positive or negative) and creates an ADJUSTMENT stock movement record.
+        **Roles:** ADMIN, MANAGER
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdjustStockRequest'
+      responses:
+        '200':
+          description: Stock adjusted
+        '400':
+          description: Would result in negative stock
+
+  /inventory/movements:
+    get:
+      tags: [Inventory]
+      summary: Get stock movement history
+      description: "**Roles:** ADMIN, MANAGER"
+      parameters:
+        - name: branch_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: product_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Paginated stock movements
+
+  # ==================== AFFILIATES ====================
+  /affiliates:
+    get:
+      tags: [Affiliates]
+      summary: List all affiliates
+      description: "**Roles:** ADMIN"
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Paginated affiliates
+    post:
+      tags: [Affiliates]
+      summary: Create an affiliate
+      description: "**Roles:** ADMIN"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAffiliateRequest'
+      responses:
+        '201':
+          description: Affiliate created
+
+  /affiliates/{id}:
+    get:
+      tags: [Affiliates]
+      summary: Get affiliate by ID
+      description: "**Roles:** ADMIN"
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      responses:
+        '200':
+          description: Affiliate details
+    put:
+      tags: [Affiliates]
+      summary: Update an affiliate
+      description: "**Roles:** ADMIN"
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAffiliateRequest'
+      responses:
+        '200':
+          description: Affiliate updated
+    delete:
+      tags: [Affiliates]
+      summary: Delete an affiliate
+      description: "**Roles:** ADMIN"
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      responses:
+        '200':
+          description: Affiliate deleted
+
+  /affiliates/{id}/commissions:
+    get:
+      tags: [Affiliates]
+      summary: List commissions for an affiliate
+      description: "**Roles:** ADMIN"
+      parameters:
+        - $ref: '#/components/parameters/ID'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Paginated affiliate commissions
+
+  # ==================== SALARIES ====================
+  /salaries/generate:
+    post:
+      tags: [Salaries]
+      summary: Generate salary for a stylist
+      description: |
+        Calculates total sales and commission from transaction snapshots for a given month/year.
+        Protected by unique constraint (stylist_id + branch_id + month + year) — cannot be regenerated.
+        **Roles:** ADMIN
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateSalaryRequest'
+      responses:
+        '201':
+          description: Salary generated
+        '400':
+          description: Already generated or validation error
+
+  /salaries/{id}:
+    get:
+      tags: [Salaries]
+      summary: Get salary record by ID
+      description: "**Roles:** ADMIN"
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      responses:
+        '200':
+          description: Salary record details
+
+  /salaries/{id}/paid:
+    post:
+      tags: [Salaries]
+      summary: Mark salary as paid
+      description: "**Roles:** ADMIN"
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      responses:
+        '200':
+          description: Salary marked as paid
+
+  # ==================== EXPENSE CATEGORIES ====================
+  /expense-categories:
+    get:
+      tags: [Expense Categories]
+      summary: List all expense categories
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Paginated expense categories
+    post:
+      tags: [Expense Categories]
+      summary: Create an expense category
+      description: "**Roles:** ADMIN, MANAGER"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateExpenseCategoryRequest'
+      responses:
+        '201':
+          description: Expense category created
+
+  /expense-categories/{id}:
+    get:
+      tags: [Expense Categories]
+      summary: Get expense category by ID
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      responses:
+        '200':
+          description: Expense category details
+    put:
+      tags: [Expense Categories]
+      summary: Update an expense category
+      description: "**Roles:** ADMIN, MANAGER"
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateExpenseCategoryRequest'
+      responses:
+        '200':
+          description: Category updated
+    delete:
+      tags: [Expense Categories]
+      summary: Delete an expense category
+      description: "**Roles:** ADMIN"
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      responses:
+        '200':
+          description: Category deleted
+
+  # ==================== EXPENSES ====================
+  /expenses:
+    post:
+      tags: [Expenses]
+      summary: Create an expense
+      description: "**Roles:** ADMIN, MANAGER"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateExpenseRequest'
+      responses:
+        '201':
+          description: Expense created
+
+  /expenses/{id}:
+    get:
+      tags: [Expenses]
+      summary: Get expense by ID
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      responses:
+        '200':
+          description: Expense details
+    put:
+      tags: [Expenses]
+      summary: Update an expense
+      description: "**Roles:** ADMIN, MANAGER"
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateExpenseRequest'
+      responses:
+        '200':
+          description: Expense updated
+    delete:
+      tags: [Expenses]
+      summary: Delete an expense
+      description: "**Roles:** ADMIN, MANAGER"
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      responses:
+        '200':
+          description: Expense deleted
+
+  # ==================== REPORTS ====================
+  /reports/financial:
+    get:
+      tags: [Reports]
+      summary: Financial report
+      description: |
+        Returns Revenue, COGS (commission + affiliate commission + retail cost + discount),
+        Gross Profit, OPEX, and Net Profit for a branch within a date range.
+        **Roles:** ADMIN, MANAGER
+      parameters:
+        - name: branch_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: start_date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+            example: "2026-01-01"
+        - name: end_date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+            example: "2026-01-31"
+      responses:
+        '200':
+          description: Financial report
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - properties:
+                      data:
+                        $ref: '#/components/schemas/FinancialReport'
+
+  /reports/income-by-type:
+    get:
+      tags: [Reports]
+      summary: Revenue breakdown by income type
+      description: |
+        Returns revenue broken down by HAIRCUT, TREATMENT, and PRODUCT income streams.
+        **Roles:** ADMIN, MANAGER
+      parameters:
+        - name: branch_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: start_date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Income breakdown
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          HAIRCUT:
+                            type: integer
+                            format: int64
+                          TREATMENT:
+                            type: integer
+                            format: int64
+                          PRODUCT:
+                            type: integer
+                            format: int64
+
+# ================================================================
+# COMPONENTS
+# ================================================================
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    ID:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        default: 1
+        minimum: 1
+    PageSize:
+      name: page_size
+      in: query
+      schema:
+        type: integer
+        default: 20
+        minimum: 1
+        maximum: 100
+
+  responses:
+    BadRequest:
+      description: Bad request / validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: Authentication required or invalid token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  schemas:
+    # ---- Response Envelopes ----
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+        data:
+          type: object
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+
+    PaginatedResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items: {}
+        meta:
+          type: object
+          properties:
+            page:
+              type: integer
+            page_size:
+              type: integer
+            total_items:
+              type: integer
+              format: int64
+            total_pages:
+              type: integer
+              format: int64
+
+    # ---- Auth ----
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: "admin@hairhaus.com"
+        password:
+          type: string
+          example: "password123"
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIs..."
+        user:
+          $ref: '#/components/schemas/UserResponse'
+
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [ADMIN, MANAGER, CASHIER]
+        branch_id:
+          type: string
+          format: uuid
+
+    # ---- Branch ----
+    Branch:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "HAIRHAUS Menteng"
+        code:
+          type: string
+          example: "HH-MTG"
+        address:
+          type: string
+        phone:
+          type: string
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateBranchRequest:
+      type: object
+      required: [name, code]
+      properties:
+        name:
+          type: string
+          example: "HAIRHAUS Menteng"
+        code:
+          type: string
+          example: "HH-MTG"
+        address:
+          type: string
+        phone:
+          type: string
+
+    UpdateBranchRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        address:
+          type: string
+        phone:
+          type: string
+        is_active:
+          type: boolean
+
+    # ---- User ----
+    CreateUserRequest:
+      type: object
+      required: [name, email, password, role, branch_id]
+      properties:
+        name:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+        role:
+          type: string
+          enum: [ADMIN, MANAGER, CASHIER]
+        branch_id:
+          type: string
+          format: uuid
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [ADMIN, MANAGER, CASHIER]
+        branch_id:
+          type: string
+          format: uuid
+
+    # ---- Product Category ----
+    CreateProductCategoryRequest:
+      type: object
+      required: [name, code]
+      properties:
+        name:
+          type: string
+          example: "Haircut"
+        code:
+          type: string
+          example: "Haircut"
+
+    UpdateProductCategoryRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+
+    # ---- Product ----
+    CreateProductRequest:
+      type: object
+      required: [name, product_type, category_id]
+      properties:
+        name:
+          type: string
+          example: "Regular Haircut"
+        product_type:
+          type: string
+          enum: [SERVICE, RETAIL]
+        category_id:
+          type: string
+          format: uuid
+        base_price:
+          type: integer
+          format: int64
+          example: 50000
+        cost_price:
+          type: integer
+          format: int64
+          example: 0
+
+    UpdateProductRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        product_type:
+          type: string
+          enum: [SERVICE, RETAIL]
+        category_id:
+          type: string
+          format: uuid
+        base_price:
+          type: integer
+          format: int64
+        cost_price:
+          type: integer
+          format: int64
+        is_active:
+          type: boolean
+
+    # ---- Stylist ----
+    CreateStylistRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          example: "Bondan"
+
+    UpdateStylistRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        is_active:
+          type: boolean
+
+    # ---- Branch Product ----
+    BranchProduct:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        branch_id:
+          type: string
+          format: uuid
+        product_id:
+          type: string
+          format: uuid
+        price_override:
+          type: integer
+          format: int64
+          nullable: true
+        stock:
+          type: integer
+          format: int64
+        product:
+          $ref: '#/components/schemas/Product'
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        product_type:
+          type: string
+          enum: [SERVICE, RETAIL]
+        category_id:
+          type: string
+          format: uuid
+        base_price:
+          type: integer
+          format: int64
+        cost_price:
+          type: integer
+          format: int64
+        is_active:
+          type: boolean
+
+    CreateBranchProductRequest:
+      type: object
+      required: [branch_id, product_id]
+      properties:
+        branch_id:
+          type: string
+          format: uuid
+        product_id:
+          type: string
+          format: uuid
+        price_override:
+          type: integer
+          format: int64
+          nullable: true
+        stock:
+          type: integer
+          format: int64
+          default: 0
+
+    UpdateBranchProductRequest:
+      type: object
+      properties:
+        price_override:
+          type: integer
+          format: int64
+          nullable: true
+
+    # ---- Branch Stylist ----
+    BranchStylist:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        branch_id:
+          type: string
+          format: uuid
+        stylist_id:
+          type: string
+          format: uuid
+        haircut_price_override:
+          type: integer
+          format: int64
+          nullable: true
+
+    CreateBranchStylistRequest:
+      type: object
+      required: [branch_id, stylist_id]
+      properties:
+        branch_id:
+          type: string
+          format: uuid
+        stylist_id:
+          type: string
+          format: uuid
+        haircut_price_override:
+          type: integer
+          format: int64
+          nullable: true
+
+    UpdateBranchStylistRequest:
+      type: object
+      properties:
+        haircut_price_override:
+          type: integer
+          format: int64
+          nullable: true
+
+    # ---- Customer ----
+    CreateCustomerRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          example: "Ahmad"
+        phone:
+          type: string
+        loyalty_external_id:
+          type: string
+
+    UpdateCustomerRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        loyalty_external_id:
+          type: string
+
+    # ---- Cash Drawer ----
+    CashDrawer:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        branch_id:
+          type: string
+          format: uuid
+        opened_at:
+          type: string
+          format: date-time
+        closed_at:
+          type: string
+          format: date-time
+          nullable: true
+        opening_amount:
+          type: integer
+          format: int64
+        expected_cash:
+          type: integer
+          format: int64
+        counted_cash:
+          type: integer
+          format: int64
+        variance:
+          type: integer
+          format: int64
+        status:
+          type: string
+          enum: [OPEN, CLOSING, CLOSED]
+        closing_snapshot:
+          type: object
+          nullable: true
+
+    OpenDrawerRequest:
+      type: object
+      required: [branch_id]
+      properties:
+        branch_id:
+          type: string
+          format: uuid
+        opening_amount:
+          type: integer
+          format: int64
+          example: 500000
+
+    CloseDrawerRequest:
+      type: object
+      required: [counted_cash]
+      properties:
+        counted_cash:
+          type: integer
+          format: int64
+          example: 1500000
+
+    # ---- Transaction ----
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        invoice_no:
+          type: string
+          example: "HH-MTG-20260306-0001"
+        branch_id:
+          type: string
+          format: uuid
+        customer_id:
+          type: string
+          format: uuid
+          nullable: true
+        subtotal_amount:
+          type: integer
+          format: int64
+        discount_amount:
+          type: integer
+          format: int64
+        total_amount:
+          type: integer
+          format: int64
+        affiliate_commission_amount_snapshot:
+          type: integer
+          format: int64
+        status:
+          type: string
+          enum: [DRAFT, COMPLETED, VOIDED]
+        idempotency_key:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionItem'
+        payments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Payment'
+        created_at:
+          type: string
+          format: date-time
+
+    TransactionItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        product_name_snapshot:
+          type: string
+        product_type_snapshot:
+          type: string
+        category_name_snapshot:
+          type: string
+        income_type_snapshot:
+          type: string
+          enum: [HAIRCUT, TREATMENT, PRODUCT]
+        stylist_name_snapshot:
+          type: string
+        price_snapshot:
+          type: integer
+          format: int64
+        quantity:
+          type: integer
+          format: int64
+        gross_subtotal:
+          type: integer
+          format: int64
+        item_discount:
+          type: integer
+          format: int64
+        net_subtotal:
+          type: integer
+          format: int64
+        commission_amount_snapshot:
+          type: integer
+          format: int64
+        cost_price_snapshot:
+          type: integer
+          format: int64
+
+    Payment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        method:
+          type: string
+          enum: [CASH, QRIS, DEBIT, CREDIT]
+        amount:
+          type: integer
+          format: int64
+        reference_no:
+          type: string
+
+    CheckoutRequest:
+      type: object
+      required: [branch_id, items, payments, idempotency_key]
+      properties:
+        branch_id:
+          type: string
+          format: uuid
+        customer_id:
+          type: string
+          format: uuid
+          nullable: true
+        affiliate_code:
+          type: string
+          example: "REF-AHMAD"
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/CheckoutItemRequest'
+        payments:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/PaymentRequest'
+        discount_amount:
+          type: integer
+          format: int64
+          default: 0
+        idempotency_key:
+          type: string
+          example: "txn-abc123-unique"
+
+    CheckoutItemRequest:
+      type: object
+      required: [product_id, quantity]
+      properties:
+        product_id:
+          type: string
+          format: uuid
+        stylist_id:
+          type: string
+          format: uuid
+          nullable: true
+        quantity:
+          type: integer
+          format: int64
+          minimum: 1
+
+    PaymentRequest:
+      type: object
+      required: [method, amount]
+      properties:
+        method:
+          type: string
+          enum: [CASH, QRIS, DEBIT, CREDIT]
+        amount:
+          type: integer
+          format: int64
+          minimum: 1
+        reference_no:
+          type: string
+
+    EditTransactionRequest:
+      type: object
+      required: [edit_reason]
+      properties:
+        discount_amount:
+          type: integer
+          format: int64
+        edit_reason:
+          type: string
+          example: "Manager discount applied"
+
+    # ---- Inventory ----
+    RestockRequest:
+      type: object
+      required: [branch_id, product_id, quantity]
+      properties:
+        branch_id:
+          type: string
+          format: uuid
+        product_id:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+          format: int64
+          minimum: 1
+        note:
+          type: string
+
+    AdjustStockRequest:
+      type: object
+      required: [branch_id, product_id, change, note]
+      properties:
+        branch_id:
+          type: string
+          format: uuid
+        product_id:
+          type: string
+          format: uuid
+        change:
+          type: integer
+          format: int64
+          description: "Positive to add, negative to subtract"
+        note:
+          type: string
+
+    # ---- Affiliate ----
+    CreateAffiliateRequest:
+      type: object
+      required: [loyalty_member_id, affiliate_code, name, commission_type]
+      properties:
+        loyalty_member_id:
+          type: string
+        affiliate_code:
+          type: string
+          example: "REF-AHMAD"
+        name:
+          type: string
+          example: "Ahmad"
+        commission_type:
+          type: string
+          enum: [PERCENTAGE, FIXED]
+        commission_percentage:
+          type: number
+          format: double
+          example: 5.0
+        commission_fixed:
+          type: integer
+          format: int64
+          example: 10000
+
+    UpdateAffiliateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        commission_type:
+          type: string
+          enum: [PERCENTAGE, FIXED]
+        commission_percentage:
+          type: number
+          format: double
+        commission_fixed:
+          type: integer
+          format: int64
+        is_active:
+          type: boolean
+
+    # ---- Salary ----
+    GenerateSalaryRequest:
+      type: object
+      required: [branch_id, stylist_id, month, year]
+      properties:
+        branch_id:
+          type: string
+          format: uuid
+        stylist_id:
+          type: string
+          format: uuid
+        month:
+          type: integer
+          minimum: 1
+          maximum: 12
+          example: 3
+        year:
+          type: integer
+          minimum: 2020
+          example: 2026
+
+    # ---- Expense ----
+    CreateExpenseCategoryRequest:
+      type: object
+      required: [name, code]
+      properties:
+        name:
+          type: string
+          example: "Electricity"
+        code:
+          type: string
+          example: "ELECTRICITY"
+
+    UpdateExpenseCategoryRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+
+    CreateExpenseRequest:
+      type: object
+      required: [branch_id, category_id, amount, expense_date]
+      properties:
+        branch_id:
+          type: string
+          format: uuid
+        category_id:
+          type: string
+          format: uuid
+        description:
+          type: string
+          example: "March electricity bill"
+        amount:
+          type: integer
+          format: int64
+          minimum: 1
+          example: 1500000
+        expense_date:
+          type: string
+          format: date
+          example: "2026-03-01"
+
+    UpdateExpenseRequest:
+      type: object
+      properties:
+        category_id:
+          type: string
+          format: uuid
+        description:
+          type: string
+        amount:
+          type: integer
+          format: int64
+        expense_date:
+          type: string
+          format: date
+
+    # ---- Report ----
+    FinancialReport:
+      type: object
+      properties:
+        revenue:
+          type: integer
+          format: int64
+          description: "SUM(subtotal_amount)"
+        cogs:
+          type: object
+          properties:
+            commission:
+              type: integer
+              format: int64
+            affiliate_commission:
+              type: integer
+              format: int64
+            retail_cost:
+              type: integer
+              format: int64
+            discount:
+              type: integer
+              format: int64
+            total:
+              type: integer
+              format: int64
+        gross_profit:
+          type: integer
+          format: int64
+          description: "Revenue - COGS"
+        opex:
+          type: integer
+          format: int64
+          description: "SUM(expenses)"
+        net_profit:
+          type: integer
+          format: int64
+          description: "Gross Profit - OPEX"

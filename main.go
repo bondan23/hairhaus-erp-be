@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"hairhaus-pos-be/config"
+	"hairhaus-pos-be/docs"
 	"hairhaus-pos-be/handlers"
 	"hairhaus-pos-be/repositories"
 	"hairhaus-pos-be/routes"
@@ -103,6 +104,10 @@ func main() {
 
 	// Setup router
 	router := routes.SetupRouter(h, cfg.JWT.Secret)
+
+	// Setup Swagger UI at /swagger
+	docs.SetupSwagger(router)
+	log.Println("📖 Swagger UI available at /swagger")
 
 	// Start server
 	addr := fmt.Sprintf(":%s", cfg.Server.Port)
