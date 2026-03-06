@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"hairhaus-pos-be/clients"
 	"hairhaus-pos-be/dto"
 	"hairhaus-pos-be/services"
 	"hairhaus-pos-be/utils"
@@ -100,11 +101,12 @@ func (h *CashDrawerHandler) GetOpen(c *gin.Context) {
 
 // ===== Transaction Handler =====
 type TransactionHandler struct {
-	service *services.TransactionService
+	service       *services.TransactionService
+	loyaltyClient *clients.LoyaltyClient
 }
 
-func NewTransactionHandler(service *services.TransactionService) *TransactionHandler {
-	return &TransactionHandler{service: service}
+func NewTransactionHandler(service *services.TransactionService, loyaltyClient *clients.LoyaltyClient) *TransactionHandler {
+	return &TransactionHandler{service: service, loyaltyClient: loyaltyClient}
 }
 
 func (h *TransactionHandler) Checkout(c *gin.Context) {
@@ -252,11 +254,12 @@ func (h *InventoryHandler) GetMovements(c *gin.Context) {
 
 // ===== Affiliate Handler =====
 type AffiliateHandler struct {
-	service *services.AffiliateService
+	service       *services.AffiliateService
+	loyaltyClient *clients.LoyaltyClient
 }
 
-func NewAffiliateHandler(service *services.AffiliateService) *AffiliateHandler {
-	return &AffiliateHandler{service: service}
+func NewAffiliateHandler(service *services.AffiliateService, loyaltyClient *clients.LoyaltyClient) *AffiliateHandler {
+	return &AffiliateHandler{service: service, loyaltyClient: loyaltyClient}
 }
 
 func (h *AffiliateHandler) Create(c *gin.Context) {

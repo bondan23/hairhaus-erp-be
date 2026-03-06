@@ -11,16 +11,18 @@ import (
 type JWTClaims struct {
 	UserID      uuid.UUID `json:"user_id"`
 	EmployeeID  string    `json:"employee_id"`
+	OutletID    string    `json:"outlet_id"`
 	PhoneNumber string    `json:"phone_number"`
 	Role        string    `json:"role"`
 	BranchID    uuid.UUID `json:"branch_id"`
 	jwt.RegisteredClaims
 }
 
-func GenerateToken(userID uuid.UUID, employeeID, phoneNumber, role string, branchID uuid.UUID, secret string, expiryHours int) (string, error) {
+func GenerateToken(userID uuid.UUID, employeeID, outletID, phoneNumber, role string, branchID uuid.UUID, secret string, expiryHours int) (string, error) {
 	claims := JWTClaims{
 		UserID:      userID,
 		EmployeeID:  employeeID,
+		OutletID:    outletID,
 		PhoneNumber: phoneNumber,
 		Role:        role,
 		BranchID:    branchID,

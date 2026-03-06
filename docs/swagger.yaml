@@ -1360,6 +1360,9 @@ components:
         employee_id:
           type: string
           description: HAIRHAUS Loyalty ID
+        outlet_id:
+          type: string
+          description: HAIRHAUS Loyalty Outlet ID
         name:
           type: string
         phone_number:
@@ -1427,12 +1430,16 @@ components:
     # ---- User ----
     CreateUserRequest:
       type: object
-      required: [employee_id, name, phone_number, pin, role, branch_id]
+      required: [employee_id, outlet_id, name, phone_number, pin, role, branch_id]
       properties:
         employee_id:
           type: string
           description: HAIRHAUS Loyalty ID (manually input)
           example: "EMP-001"
+        outlet_id:
+          type: string
+          description: HAIRHAUS Loyalty Outlet ID (manually input)
+          example: "OUT-001"
         name:
           type: string
           example: "John Doe"
@@ -1454,6 +1461,8 @@ components:
       type: object
       properties:
         employee_id:
+          type: string
+        outlet_id:
           type: string
         name:
           type: string

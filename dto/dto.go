@@ -31,6 +31,7 @@ type UpdateBranchRequest struct {
 // ===== User =====
 type CreateUserRequest struct {
 	EmployeeID  string    `json:"employee_id" binding:"required"`
+	OutletID    string    `json:"outlet_id" binding:"required"`
 	Name        string    `json:"name" binding:"required"`
 	PhoneNumber string    `json:"phone_number" binding:"required"`
 	Pin         string    `json:"pin" binding:"required,min=4"`
@@ -40,6 +41,7 @@ type CreateUserRequest struct {
 
 type UpdateUserRequest struct {
 	EmployeeID  *string    `json:"employee_id"`
+	OutletID    *string    `json:"outlet_id"`
 	Name        *string    `json:"name"`
 	PhoneNumber *string    `json:"phone_number"`
 	Pin         *string    `json:"pin"`
@@ -50,6 +52,7 @@ type UpdateUserRequest struct {
 type UserResponse struct {
 	ID          uuid.UUID `json:"id"`
 	EmployeeID  string    `json:"employee_id"`
+	OutletID    string    `json:"outlet_id"`
 	Name        string    `json:"name"`
 	PhoneNumber string    `json:"phone_number"`
 	Role        string    `json:"role"`

@@ -25,6 +25,7 @@ func (s *UserService) Create(req dto.CreateUserRequest) (*models.User, error) {
 
 	user := &models.User{
 		EmployeeID:  req.EmployeeID,
+		OutletID:    req.OutletID,
 		Name:        req.Name,
 		PhoneNumber: req.PhoneNumber,
 		Pin:         hashedPin,
@@ -52,6 +53,9 @@ func (s *UserService) Update(id uuid.UUID, req dto.UpdateUserRequest) (*models.U
 	}
 	if req.EmployeeID != nil {
 		user.EmployeeID = *req.EmployeeID
+	}
+	if req.OutletID != nil {
+		user.OutletID = *req.OutletID
 	}
 	if req.Name != nil {
 		user.Name = *req.Name

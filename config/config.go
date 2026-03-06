@@ -9,10 +9,16 @@ import (
 )
 
 type Config struct {
-	DB     DBConfig
-	Redis  RedisConfig
-	JWT    JWTConfig
-	Server ServerConfig
+	DB             DBConfig
+	Redis          RedisConfig
+	JWT            JWTConfig
+	Server         ServerConfig
+	LoyaltyService LoyaltyServiceConfig
+}
+
+type LoyaltyServiceConfig struct {
+	APIURL string
+	APIKey string
 }
 
 type DBConfig struct {
@@ -78,6 +84,10 @@ func Load() (*Config, error) {
 		},
 		Server: ServerConfig{
 			Port: getEnv("SERVER_PORT", "8080"),
+		},
+		LoyaltyService: LoyaltyServiceConfig{
+			APIURL: os.Getenv("HAIRHAUS_LOYALTY_API_URL"),
+			APIKey: os.Getenv("HAIRHAUS_LOYALTY_API_KEY"),
 		},
 	}
 

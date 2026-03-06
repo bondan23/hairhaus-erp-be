@@ -22,6 +22,7 @@ CREATE INDEX idx_branches_deleted_at ON branches(deleted_at);
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     employee_id VARCHAR(255) NOT NULL UNIQUE,
+    outlet_id VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,
     phone_number VARCHAR(50) NOT NULL UNIQUE,
     pin VARCHAR(255) NOT NULL,

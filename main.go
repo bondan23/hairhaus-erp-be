@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"hairhaus-pos-be/clients"
 	"hairhaus-pos-be/config"
 	"hairhaus-pos-be/docs"
 	"hairhaus-pos-be/handlers"
@@ -58,6 +59,9 @@ func main() {
 	expenseRepo := repositories.NewExpenseRepository(db)
 	auditLogRepo := repositories.NewAuditLogRepository(db)
 
+	// Initialize secondary clients
+	loyaltyClient := clients.NewLoyaltyClient(cfg.LoyaltyService.APIURL, cfg.LoyaltyService.APIKey)
+
 	// Initialize services
 	authService := services.NewAuthService(userRepo, cfg.JWT.Secret, cfg.JWT.ExpiryHours)
 	branchService := services.NewBranchService(branchRepo)
@@ -93,9 +97,9 @@ func main() {
 		BranchStylist:   handlers.NewBranchStylistHandler(branchStylistService),
 		Customer:        handlers.NewCustomerHandler(customerService),
 		CashDrawer:      handlers.NewCashDrawerHandler(cashDrawerService),
-		Transaction:     handlers.NewTransactionHandler(transactionService),
+		Transaction:     handlers.NewTransactionHandler(transactionService, loyaltyClient),
 		Inventory:       handlers.NewInventoryHandler(inventoryService),
-		Affiliate:       handlers.NewAffiliateHandler(affiliateService),
+		Affiliate:       handlers.NewAffiliateHandler(affiliateService, loyaltyClient),
 		Salary:          handlers.NewSalaryHandler(salaryService),
 		ExpenseCategory: handlers.NewExpenseCategoryHandler(expenseCategoryService),
 		Expense:         handlers.NewExpenseHandler(expenseService),
