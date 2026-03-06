@@ -7,19 +7,28 @@ import (
 	"gorm.io/gorm"
 )
 
-type UserRepository struct {
+type UserRepository interface {
+	Create(user *models.User) error
+	FindAll(offset, limit int) ([]models.User, int64, error)
+	FindByID(id uuid.UUID) (*models.User, error)
+	FindByPhone(phoneNumber string) (*models.User, error)
+	Update(user *models.User) error
+	Delete(id uuid.UUID) error
+}
+
+type userRepository struct {
 	db *gorm.DB
 }
 
-func NewUserRepository(db *gorm.DB) *UserRepository {
-	return &UserRepository{db: db}
+func NewUserRepository(db *gorm.DB) UserRepository {
+	return &userRepository{db: db}
 }
 
-func (r *UserRepository) Create(user *models.User) error {
+func (r *userRepository) Create(user *models.User) error {
 	return r.db.Create(user).Error
 }
 
-func (r *UserRepository) FindAll(offset, limit int) ([]models.User, int64, error) {
+func (r *userRepository) FindAll(offset, limit int) ([]models.User, int64, error) {
 	var users []models.User
 	var total int64
 	r.db.Model(&models.User{}).Count(&total)
@@ -27,7 +36,7 @@ func (r *UserRepository) FindAll(offset, limit int) ([]models.User, int64, error
 	return users, total, err
 }
 
-func (r *UserRepository) FindByID(id uuid.UUID) (*models.User, error) {
+func (r *userRepository) FindByID(id uuid.UUID) (*models.User, error) {
 	var user models.User
 	err := r.db.Preload("Branch").First(&user, "id = ?", id).Error
 	if err != nil {
@@ -36,7 +45,7 @@ func (r *UserRepository) FindByID(id uuid.UUID) (*models.User, error) {
 	return &user, nil
 }
 
-func (r *UserRepository) FindByPhone(phoneNumber string) (*models.User, error) {
+func (r *userRepository) FindByPhone(phoneNumber string) (*models.User, error) {
 	var user models.User
 	err := r.db.Preload("Branch").First(&user, "phone_number = ?", phoneNumber).Error
 	if err != nil {
@@ -45,11 +54,11 @@ func (r *UserRepository) FindByPhone(phoneNumber string) (*models.User, error) {
 	return &user, nil
 }
 
-func (r *UserRepository) Update(user *models.User) error {
+func (r *userRepository) Update(user *models.User) error {
 	return r.db.Save(user).Error
 }
 
-func (r *UserRepository) Delete(id uuid.UUID) error {
+func (r *userRepository) Delete(id uuid.UUID) error {
 	return r.db.Delete(&models.User{}, "id = ?", id).Error
 }
 

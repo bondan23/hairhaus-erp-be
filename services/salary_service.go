@@ -11,15 +11,15 @@ import (
 )
 
 type SalaryService struct {
-	salaryRepo *repositories.SalaryRepository
-	txnRepo    *repositories.TransactionRepository
-	auditRepo  *repositories.AuditLogRepository
+	salaryRepo repositories.SalaryRepository
+	txnRepo    repositories.TransactionRepository
+	auditRepo  repositories.AuditLogRepository
 }
 
 func NewSalaryService(
-	salaryRepo *repositories.SalaryRepository,
-	txnRepo *repositories.TransactionRepository,
-	auditRepo *repositories.AuditLogRepository,
+	salaryRepo repositories.SalaryRepository,
+	txnRepo repositories.TransactionRepository,
+	auditRepo repositories.AuditLogRepository,
 ) *SalaryService {
 	return &SalaryService{salaryRepo: salaryRepo, txnRepo: txnRepo, auditRepo: auditRepo}
 }

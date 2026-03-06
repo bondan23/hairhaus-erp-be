@@ -9,10 +9,10 @@ import (
 )
 
 type ProductService struct {
-	repo *repositories.ProductRepository
+	repo repositories.ProductRepository
 }
 
-func NewProductService(repo *repositories.ProductRepository) *ProductService {
+func NewProductService(repo repositories.ProductRepository) *ProductService {
 	return &ProductService{repo: repo}
 }
 

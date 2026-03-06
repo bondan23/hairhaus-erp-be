@@ -12,10 +12,10 @@ import (
 )
 
 type ExpenseCategoryService struct {
-	repo *repositories.ExpenseCategoryRepository
+	repo repositories.ExpenseCategoryRepository
 }
 
-func NewExpenseCategoryService(repo *repositories.ExpenseCategoryRepository) *ExpenseCategoryService {
+func NewExpenseCategoryService(repo repositories.ExpenseCategoryRepository) *ExpenseCategoryService {
 	return &ExpenseCategoryService{repo: repo}
 }
 
@@ -58,10 +58,10 @@ func (s *ExpenseCategoryService) Delete(id uuid.UUID) error {
 
 // ExpenseService
 type ExpenseService struct {
-	repo *repositories.ExpenseRepository
+	repo repositories.ExpenseRepository
 }
 
-func NewExpenseService(repo *repositories.ExpenseRepository) *ExpenseService {
+func NewExpenseService(repo repositories.ExpenseRepository) *ExpenseService {
 	return &ExpenseService{repo: repo}
 }
 

@@ -14,15 +14,15 @@ import (
 )
 
 type CashDrawerService struct {
-	repo        *repositories.CashDrawerRepository
-	txnRepo     *repositories.TransactionRepository
-	auditRepo   *repositories.AuditLogRepository
+	repo        repositories.CashDrawerRepository
+	txnRepo     repositories.TransactionRepository
+	auditRepo   repositories.AuditLogRepository
 }
 
 func NewCashDrawerService(
-	repo *repositories.CashDrawerRepository,
-	txnRepo *repositories.TransactionRepository,
-	auditRepo *repositories.AuditLogRepository,
+	repo repositories.CashDrawerRepository,
+	txnRepo repositories.TransactionRepository,
+	auditRepo repositories.AuditLogRepository,
 ) *CashDrawerService {
 	return &CashDrawerService{repo: repo, txnRepo: txnRepo, auditRepo: auditRepo}
 }

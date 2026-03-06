@@ -9,11 +9,11 @@ import (
 )
 
 type AffiliateService struct {
-	repo     *repositories.AffiliateRepository
-	commRepo *repositories.AffiliateCommissionRepository
+	repo     repositories.AffiliateRepository
+	commRepo repositories.AffiliateCommissionRepository
 }
 
-func NewAffiliateService(repo *repositories.AffiliateRepository, commRepo *repositories.AffiliateCommissionRepository) *AffiliateService {
+func NewAffiliateService(repo repositories.AffiliateRepository, commRepo repositories.AffiliateCommissionRepository) *AffiliateService {
 	return &AffiliateService{repo: repo, commRepo: commRepo}
 }
 

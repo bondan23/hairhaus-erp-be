@@ -1,0 +1,24 @@
+with-expecter: true
+packages:
+  hairhaus-pos-be/repositories:
+    config:
+      dir: "mocks/repositories"
+      mockname: "Mock{{.InterfaceName}}"
+      outpkg: "mock_repositories"
+    interfaces:
+      AffiliateRepository: {}
+      AffiliateCommissionRepository: {}
+      AuditLogRepository: {}
+      BranchRepository: {}
+      BranchProductRepository: {}
+      BranchStylistRepository: {}
+      CashDrawerRepository: {}
+      CustomerRepository: {}
+      ExpenseRepository: {}
+      ProductRepository: {}
+      ProductCategoryRepository: {}
+      SalaryRepository: {}
+      StockMovementRepository: {}
+      StylistRepository: {}
+      TransactionRepository: {}
+      UserRepository: {}

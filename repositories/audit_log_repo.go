@@ -7,23 +7,30 @@ import (
 	"gorm.io/gorm"
 )
 
-type AuditLogRepository struct {
+type AuditLogRepository interface {
+	Create(log *models.AuditLog) error
+	CreateWithTx(tx *gorm.DB, log *models.AuditLog) error
+	FindByEntity(entityType string, entityID uuid.UUID) ([]models.AuditLog, error)
+	FindAll(offset, limit int) ([]models.AuditLog, int64, error)
+}
+
+type auditLogRepository struct {
 	db *gorm.DB
 }
 
-func NewAuditLogRepository(db *gorm.DB) *AuditLogRepository {
-	return &AuditLogRepository{db: db}
+func NewAuditLogRepository(db *gorm.DB) AuditLogRepository {
+	return &auditLogRepository{db: db}
 }
 
-func (r *AuditLogRepository) Create(log *models.AuditLog) error {
+func (r *auditLogRepository) Create(log *models.AuditLog) error {
 	return r.db.Create(log).Error
 }
 
-func (r *AuditLogRepository) CreateWithTx(tx *gorm.DB, log *models.AuditLog) error {
+func (r *auditLogRepository) CreateWithTx(tx *gorm.DB, log *models.AuditLog) error {
 	return tx.Create(log).Error
 }
 
-func (r *AuditLogRepository) FindByEntity(entityType string, entityID uuid.UUID) ([]models.AuditLog, error) {
+func (r *auditLogRepository) FindByEntity(entityType string, entityID uuid.UUID) ([]models.AuditLog, error) {
 	var logs []models.AuditLog
 	err := r.db.Where("entity_type = ? AND entity_id = ?", entityType, entityID).
 		Order("created_at DESC").
@@ -31,7 +38,7 @@ func (r *AuditLogRepository) FindByEntity(entityType string, entityID uuid.UUID)
 	return logs, err
 }
 
-func (r *AuditLogRepository) FindAll(offset, limit int) ([]models.AuditLog, int64, error) {
+func (r *auditLogRepository) FindAll(offset, limit int) ([]models.AuditLog, int64, error) {
 	var logs []models.AuditLog
 	var total int64
 	r.db.Model(&models.AuditLog{}).Count(&total)

@@ -12,13 +12,13 @@ import (
 )
 
 type InventoryService struct {
-	bpRepo *repositories.BranchProductRepository
-	smRepo *repositories.StockMovementRepository
+	bpRepo repositories.BranchProductRepository
+	smRepo repositories.StockMovementRepository
 }
 
 func NewInventoryService(
-	bpRepo *repositories.BranchProductRepository,
-	smRepo *repositories.StockMovementRepository,
+	bpRepo repositories.BranchProductRepository,
+	smRepo repositories.StockMovementRepository,
 ) *InventoryService {
 	return &InventoryService{bpRepo: bpRepo, smRepo: smRepo}
 }

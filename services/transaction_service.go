@@ -16,32 +16,32 @@ import (
 )
 
 type TransactionService struct {
-	txnRepo       *repositories.TransactionRepository
-	branchRepo    *repositories.BranchRepository
-	bpRepo        *repositories.BranchProductRepository
-	bsRepo        *repositories.BranchStylistRepository
-	productRepo   *repositories.ProductRepository
-	stylistRepo   *repositories.StylistRepository
-	drawerRepo    *repositories.CashDrawerRepository
-	affiliateRepo *repositories.AffiliateRepository
-	affCommRepo   *repositories.AffiliateCommissionRepository
-	smRepo        *repositories.StockMovementRepository
-	auditRepo     *repositories.AuditLogRepository
+	txnRepo       repositories.TransactionRepository
+	branchRepo    repositories.BranchRepository
+	bpRepo        repositories.BranchProductRepository
+	bsRepo        repositories.BranchStylistRepository
+	productRepo   repositories.ProductRepository
+	stylistRepo   repositories.StylistRepository
+	drawerRepo    repositories.CashDrawerRepository
+	affiliateRepo repositories.AffiliateRepository
+	affCommRepo   repositories.AffiliateCommissionRepository
+	smRepo        repositories.StockMovementRepository
+	auditRepo     repositories.AuditLogRepository
 	loyaltyClient *clients.LoyaltyClient
 }
 
 func NewTransactionService(
-	txnRepo *repositories.TransactionRepository,
-	branchRepo *repositories.BranchRepository,
-	bpRepo *repositories.BranchProductRepository,
-	bsRepo *repositories.BranchStylistRepository,
-	productRepo *repositories.ProductRepository,
-	stylistRepo *repositories.StylistRepository,
-	drawerRepo *repositories.CashDrawerRepository,
-	affiliateRepo *repositories.AffiliateRepository,
-	affCommRepo *repositories.AffiliateCommissionRepository,
-	smRepo *repositories.StockMovementRepository,
-	auditRepo *repositories.AuditLogRepository,
+	txnRepo repositories.TransactionRepository,
+	branchRepo repositories.BranchRepository,
+	bpRepo repositories.BranchProductRepository,
+	bsRepo repositories.BranchStylistRepository,
+	productRepo repositories.ProductRepository,
+	stylistRepo repositories.StylistRepository,
+	drawerRepo repositories.CashDrawerRepository,
+	affiliateRepo repositories.AffiliateRepository,
+	affCommRepo repositories.AffiliateCommissionRepository,
+	smRepo repositories.StockMovementRepository,
+	auditRepo repositories.AuditLogRepository,
 	loyaltyClient *clients.LoyaltyClient,
 ) *TransactionService {
 	return &TransactionService{

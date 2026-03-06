@@ -7,19 +7,27 @@ import (
 	"gorm.io/gorm"
 )
 
-type StylistRepository struct {
+type StylistRepository interface {
+	Create(stylist *models.Stylist) error
+	FindAll(offset, limit int) ([]models.Stylist, int64, error)
+	FindByID(id uuid.UUID) (*models.Stylist, error)
+	Update(stylist *models.Stylist) error
+	Delete(id uuid.UUID) error
+}
+
+type stylistRepository struct {
 	db *gorm.DB
 }
 
-func NewStylistRepository(db *gorm.DB) *StylistRepository {
-	return &StylistRepository{db: db}
+func NewStylistRepository(db *gorm.DB) StylistRepository {
+	return &stylistRepository{db: db}
 }
 
-func (r *StylistRepository) Create(stylist *models.Stylist) error {
+func (r *stylistRepository) Create(stylist *models.Stylist) error {
 	return r.db.Create(stylist).Error
 }
 
-func (r *StylistRepository) FindAll(offset, limit int) ([]models.Stylist, int64, error) {
+func (r *stylistRepository) FindAll(offset, limit int) ([]models.Stylist, int64, error) {
 	var stylists []models.Stylist
 	var total int64
 	r.db.Model(&models.Stylist{}).Count(&total)
@@ -27,7 +35,7 @@ func (r *StylistRepository) FindAll(offset, limit int) ([]models.Stylist, int64,
 	return stylists, total, err
 }
 
-func (r *StylistRepository) FindByID(id uuid.UUID) (*models.Stylist, error) {
+func (r *stylistRepository) FindByID(id uuid.UUID) (*models.Stylist, error) {
 	var stylist models.Stylist
 	err := r.db.First(&stylist, "id = ?", id).Error
 	if err != nil {
@@ -36,10 +44,10 @@ func (r *StylistRepository) FindByID(id uuid.UUID) (*models.Stylist, error) {
 	return &stylist, nil
 }
 
-func (r *StylistRepository) Update(stylist *models.Stylist) error {
+func (r *stylistRepository) Update(stylist *models.Stylist) error {
 	return r.db.Save(stylist).Error
 }
 
-func (r *StylistRepository) Delete(id uuid.UUID) error {
+func (r *stylistRepository) Delete(id uuid.UUID) error {
 	return r.db.Delete(&models.Stylist{}, "id = ?", id).Error
 }

@@ -7,19 +7,27 @@ import (
 	"gorm.io/gorm"
 )
 
-type CashDrawerRepository struct {
+type CashDrawerRepository interface {
+	Create(drawer *models.CashDrawer) error
+	FindOpenByBranch(branchID uuid.UUID) (*models.CashDrawer, error)
+	FindByID(id uuid.UUID) (*models.CashDrawer, error)
+	FindByBranchID(branchID uuid.UUID, offset, limit int) ([]models.CashDrawer, int64, error)
+	Update(drawer *models.CashDrawer) error
+}
+
+type cashDrawerRepository struct {
 	db *gorm.DB
 }
 
-func NewCashDrawerRepository(db *gorm.DB) *CashDrawerRepository {
-	return &CashDrawerRepository{db: db}
+func NewCashDrawerRepository(db *gorm.DB) CashDrawerRepository {
+	return &cashDrawerRepository{db: db}
 }
 
-func (r *CashDrawerRepository) Create(drawer *models.CashDrawer) error {
+func (r *cashDrawerRepository) Create(drawer *models.CashDrawer) error {
 	return r.db.Create(drawer).Error
 }
 
-func (r *CashDrawerRepository) FindOpenByBranch(branchID uuid.UUID) (*models.CashDrawer, error) {
+func (r *cashDrawerRepository) FindOpenByBranch(branchID uuid.UUID) (*models.CashDrawer, error) {
 	var drawer models.CashDrawer
 	err := r.db.First(&drawer, "branch_id = ? AND status = ?", branchID, models.DrawerStatusOpen).Error
 	if err != nil {
@@ -28,7 +36,7 @@ func (r *CashDrawerRepository) FindOpenByBranch(branchID uuid.UUID) (*models.Cas
 	return &drawer, nil
 }
 
-func (r *CashDrawerRepository) FindByID(id uuid.UUID) (*models.CashDrawer, error) {
+func (r *cashDrawerRepository) FindByID(id uuid.UUID) (*models.CashDrawer, error) {
 	var drawer models.CashDrawer
 	err := r.db.Preload("Branch").First(&drawer, "id = ?", id).Error
 	if err != nil {
@@ -37,7 +45,7 @@ func (r *CashDrawerRepository) FindByID(id uuid.UUID) (*models.CashDrawer, error
 	return &drawer, nil
 }
 
-func (r *CashDrawerRepository) FindByBranchID(branchID uuid.UUID, offset, limit int) ([]models.CashDrawer, int64, error) {
+func (r *cashDrawerRepository) FindByBranchID(branchID uuid.UUID, offset, limit int) ([]models.CashDrawer, int64, error) {
 	var drawers []models.CashDrawer
 	var total int64
 	r.db.Model(&models.CashDrawer{}).Where("branch_id = ?", branchID).Count(&total)
@@ -47,6 +55,6 @@ func (r *CashDrawerRepository) FindByBranchID(branchID uuid.UUID, offset, limit 
 	return drawers, total, err
 }
 
-func (r *CashDrawerRepository) Update(drawer *models.CashDrawer) error {
+func (r *cashDrawerRepository) Update(drawer *models.CashDrawer) error {
 	return r.db.Save(drawer).Error
 }

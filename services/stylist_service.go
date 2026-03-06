@@ -9,10 +9,10 @@ import (
 )
 
 type StylistService struct {
-	repo *repositories.StylistRepository
+	repo repositories.StylistRepository
 }
 
-func NewStylistService(repo *repositories.StylistRepository) *StylistService {
+func NewStylistService(repo repositories.StylistRepository) *StylistService {
 	return &StylistService{repo: repo}
 }
 

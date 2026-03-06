@@ -7,19 +7,28 @@ import (
 	"gorm.io/gorm"
 )
 
-type BranchRepository struct {
+type BranchRepository interface {
+	Create(branch *models.Branch) error
+	FindAll(offset, limit int) ([]models.Branch, int64, error)
+	FindByID(id uuid.UUID) (*models.Branch, error)
+	FindByCode(code string) (*models.Branch, error)
+	Update(branch *models.Branch) error
+	Delete(id uuid.UUID) error
+}
+
+type branchRepository struct {
 	db *gorm.DB
 }
 
-func NewBranchRepository(db *gorm.DB) *BranchRepository {
-	return &BranchRepository{db: db}
+func NewBranchRepository(db *gorm.DB) BranchRepository {
+	return &branchRepository{db: db}
 }
 
-func (r *BranchRepository) Create(branch *models.Branch) error {
+func (r *branchRepository) Create(branch *models.Branch) error {
 	return r.db.Create(branch).Error
 }
 
-func (r *BranchRepository) FindAll(offset, limit int) ([]models.Branch, int64, error) {
+func (r *branchRepository) FindAll(offset, limit int) ([]models.Branch, int64, error) {
 	var branches []models.Branch
 	var total int64
 	r.db.Model(&models.Branch{}).Count(&total)
@@ -27,7 +36,7 @@ func (r *BranchRepository) FindAll(offset, limit int) ([]models.Branch, int64, e
 	return branches, total, err
 }
 
-func (r *BranchRepository) FindByID(id uuid.UUID) (*models.Branch, error) {
+func (r *branchRepository) FindByID(id uuid.UUID) (*models.Branch, error) {
 	var branch models.Branch
 	err := r.db.First(&branch, "id = ?", id).Error
 	if err != nil {
@@ -36,7 +45,7 @@ func (r *BranchRepository) FindByID(id uuid.UUID) (*models.Branch, error) {
 	return &branch, nil
 }
 
-func (r *BranchRepository) FindByCode(code string) (*models.Branch, error) {
+func (r *branchRepository) FindByCode(code string) (*models.Branch, error) {
 	var branch models.Branch
 	err := r.db.First(&branch, "code = ?", code).Error
 	if err != nil {
@@ -45,10 +54,10 @@ func (r *BranchRepository) FindByCode(code string) (*models.Branch, error) {
 	return &branch, nil
 }
 
-func (r *BranchRepository) Update(branch *models.Branch) error {
+func (r *branchRepository) Update(branch *models.Branch) error {
 	return r.db.Save(branch).Error
 }
 
-func (r *BranchRepository) Delete(id uuid.UUID) error {
+func (r *branchRepository) Delete(id uuid.UUID) error {
 	return r.db.Delete(&models.Branch{}, "id = ?", id).Error
 }

@@ -7,19 +7,26 @@ import (
 	"gorm.io/gorm"
 )
 
-type SalaryRepository struct {
+type SalaryRepository interface {
+	Create(salary *models.SalaryRecord) error
+	FindByBranch(branchID uuid.UUID, offset, limit int) ([]models.SalaryRecord, int64, error)
+	FindByID(id uuid.UUID) (*models.SalaryRecord, error)
+	Update(salary *models.SalaryRecord) error
+}
+
+type salaryRepository struct {
 	db *gorm.DB
 }
 
-func NewSalaryRepository(db *gorm.DB) *SalaryRepository {
-	return &SalaryRepository{db: db}
+func NewSalaryRepository(db *gorm.DB) SalaryRepository {
+	return &salaryRepository{db: db}
 }
 
-func (r *SalaryRepository) Create(salary *models.SalaryRecord) error {
+func (r *salaryRepository) Create(salary *models.SalaryRecord) error {
 	return r.db.Create(salary).Error
 }
 
-func (r *SalaryRepository) FindByBranch(branchID uuid.UUID, offset, limit int) ([]models.SalaryRecord, int64, error) {
+func (r *salaryRepository) FindByBranch(branchID uuid.UUID, offset, limit int) ([]models.SalaryRecord, int64, error) {
 	var records []models.SalaryRecord
 	var total int64
 	r.db.Model(&models.SalaryRecord{}).Where("branch_id = ?", branchID).Count(&total)
@@ -30,7 +37,7 @@ func (r *SalaryRepository) FindByBranch(branchID uuid.UUID, offset, limit int) (
 	return records, total, err
 }
 
-func (r *SalaryRepository) FindByID(id uuid.UUID) (*models.SalaryRecord, error) {
+func (r *salaryRepository) FindByID(id uuid.UUID) (*models.SalaryRecord, error) {
 	var record models.SalaryRecord
 	err := r.db.Preload("Stylist").Preload("Branch").First(&record, "id = ?", id).Error
 	if err != nil {
@@ -39,6 +46,6 @@ func (r *SalaryRepository) FindByID(id uuid.UUID) (*models.SalaryRecord, error) 
 	return &record, nil
 }
 
-func (r *SalaryRepository) Update(salary *models.SalaryRecord) error {
+func (r *salaryRepository) Update(salary *models.SalaryRecord) error {
 	return r.db.Save(salary).Error
 }

@@ -9,10 +9,10 @@ import (
 )
 
 type BranchStylistService struct {
-	repo *repositories.BranchStylistRepository
+	repo repositories.BranchStylistRepository
 }
 
-func NewBranchStylistService(repo *repositories.BranchStylistRepository) *BranchStylistService {
+func NewBranchStylistService(repo repositories.BranchStylistRepository) *BranchStylistService {
 	return &BranchStylistService{repo: repo}
 }
 

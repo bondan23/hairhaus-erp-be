@@ -7,19 +7,28 @@ import (
 	"gorm.io/gorm"
 )
 
-type BranchStylistRepository struct {
+type BranchStylistRepository interface {
+	Create(bs *models.BranchStylist) error
+	FindByBranchID(branchID uuid.UUID, offset, limit int) ([]models.BranchStylist, int64, error)
+	FindByID(id uuid.UUID) (*models.BranchStylist, error)
+	FindByBranchAndStylist(branchID, stylistID uuid.UUID) (*models.BranchStylist, error)
+	Update(bs *models.BranchStylist) error
+	Delete(id uuid.UUID) error
+}
+
+type branchStylistRepository struct {
 	db *gorm.DB
 }
 
-func NewBranchStylistRepository(db *gorm.DB) *BranchStylistRepository {
-	return &BranchStylistRepository{db: db}
+func NewBranchStylistRepository(db *gorm.DB) BranchStylistRepository {
+	return &branchStylistRepository{db: db}
 }
 
-func (r *BranchStylistRepository) Create(bs *models.BranchStylist) error {
+func (r *branchStylistRepository) Create(bs *models.BranchStylist) error {
 	return r.db.Create(bs).Error
 }
 
-func (r *BranchStylistRepository) FindByBranchID(branchID uuid.UUID, offset, limit int) ([]models.BranchStylist, int64, error) {
+func (r *branchStylistRepository) FindByBranchID(branchID uuid.UUID, offset, limit int) ([]models.BranchStylist, int64, error) {
 	var bss []models.BranchStylist
 	var total int64
 	r.db.Model(&models.BranchStylist{}).Where("branch_id = ?", branchID).Count(&total)
@@ -28,7 +37,7 @@ func (r *BranchStylistRepository) FindByBranchID(branchID uuid.UUID, offset, lim
 	return bss, total, err
 }
 
-func (r *BranchStylistRepository) FindByID(id uuid.UUID) (*models.BranchStylist, error) {
+func (r *branchStylistRepository) FindByID(id uuid.UUID) (*models.BranchStylist, error) {
 	var bs models.BranchStylist
 	err := r.db.Preload("Stylist").First(&bs, "id = ?", id).Error
 	if err != nil {
@@ -37,7 +46,7 @@ func (r *BranchStylistRepository) FindByID(id uuid.UUID) (*models.BranchStylist,
 	return &bs, nil
 }
 
-func (r *BranchStylistRepository) FindByBranchAndStylist(branchID, stylistID uuid.UUID) (*models.BranchStylist, error) {
+func (r *branchStylistRepository) FindByBranchAndStylist(branchID, stylistID uuid.UUID) (*models.BranchStylist, error) {
 	var bs models.BranchStylist
 	err := r.db.Preload("Stylist").
 		First(&bs, "branch_id = ? AND stylist_id = ?", branchID, stylistID).Error
@@ -47,10 +56,10 @@ func (r *BranchStylistRepository) FindByBranchAndStylist(branchID, stylistID uui
 	return &bs, nil
 }
 
-func (r *BranchStylistRepository) Update(bs *models.BranchStylist) error {
+func (r *branchStylistRepository) Update(bs *models.BranchStylist) error {
 	return r.db.Save(bs).Error
 }
 
-func (r *BranchStylistRepository) Delete(id uuid.UUID) error {
+func (r *branchStylistRepository) Delete(id uuid.UUID) error {
 	return r.db.Delete(&models.BranchStylist{}, "id = ?", id).Error
 }

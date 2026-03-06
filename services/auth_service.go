@@ -8,12 +8,12 @@ import (
 )
 
 type AuthService struct {
-	userRepo  *repositories.UserRepository
+	userRepo  repositories.UserRepository
 	jwtSecret string
 	jwtExpiry int
 }
 
-func NewAuthService(userRepo *repositories.UserRepository, jwtSecret string, jwtExpiry int) *AuthService {
+func NewAuthService(userRepo repositories.UserRepository, jwtSecret string, jwtExpiry int) *AuthService {
 	return &AuthService{
 		userRepo:  userRepo,
 		jwtSecret: jwtSecret,

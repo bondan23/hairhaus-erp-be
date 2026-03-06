@@ -8,19 +8,27 @@ import (
 	"gorm.io/gorm"
 )
 
-type ExpenseCategoryRepository struct {
+type ExpenseCategoryRepository interface {
+	Create(cat *models.ExpenseCategory) error
+	FindAll(offset, limit int) ([]models.ExpenseCategory, int64, error)
+	FindByID(id uuid.UUID) (*models.ExpenseCategory, error)
+	Update(cat *models.ExpenseCategory) error
+	Delete(id uuid.UUID) error
+}
+
+type expenseCategoryRepository struct {
 	db *gorm.DB
 }
 
-func NewExpenseCategoryRepository(db *gorm.DB) *ExpenseCategoryRepository {
-	return &ExpenseCategoryRepository{db: db}
+func NewExpenseCategoryRepository(db *gorm.DB) ExpenseCategoryRepository {
+	return &expenseCategoryRepository{db: db}
 }
 
-func (r *ExpenseCategoryRepository) Create(cat *models.ExpenseCategory) error {
+func (r *expenseCategoryRepository) Create(cat *models.ExpenseCategory) error {
 	return r.db.Create(cat).Error
 }
 
-func (r *ExpenseCategoryRepository) FindAll(offset, limit int) ([]models.ExpenseCategory, int64, error) {
+func (r *expenseCategoryRepository) FindAll(offset, limit int) ([]models.ExpenseCategory, int64, error) {
 	var cats []models.ExpenseCategory
 	var total int64
 	r.db.Model(&models.ExpenseCategory{}).Count(&total)
@@ -28,7 +36,7 @@ func (r *ExpenseCategoryRepository) FindAll(offset, limit int) ([]models.Expense
 	return cats, total, err
 }
 
-func (r *ExpenseCategoryRepository) FindByID(id uuid.UUID) (*models.ExpenseCategory, error) {
+func (r *expenseCategoryRepository) FindByID(id uuid.UUID) (*models.ExpenseCategory, error) {
 	var cat models.ExpenseCategory
 	err := r.db.First(&cat, "id = ?", id).Error
 	if err != nil {
@@ -37,28 +45,37 @@ func (r *ExpenseCategoryRepository) FindByID(id uuid.UUID) (*models.ExpenseCateg
 	return &cat, nil
 }
 
-func (r *ExpenseCategoryRepository) Update(cat *models.ExpenseCategory) error {
+func (r *expenseCategoryRepository) Update(cat *models.ExpenseCategory) error {
 	return r.db.Save(cat).Error
 }
 
-func (r *ExpenseCategoryRepository) Delete(id uuid.UUID) error {
+func (r *expenseCategoryRepository) Delete(id uuid.UUID) error {
 	return r.db.Delete(&models.ExpenseCategory{}, "id = ?", id).Error
 }
 
 // ExpenseRepository
-type ExpenseRepository struct {
+type ExpenseRepository interface {
+	Create(expense *models.Expense) error
+	FindByBranchID(branchID uuid.UUID, offset, limit int) ([]models.Expense, int64, error)
+	FindByID(id uuid.UUID) (*models.Expense, error)
+	Update(expense *models.Expense) error
+	Delete(id uuid.UUID) error
+	SumByBranchAndDateRange(branchID uuid.UUID, start, end time.Time) (int64, error)
+}
+
+type expenseRepository struct {
 	db *gorm.DB
 }
 
-func NewExpenseRepository(db *gorm.DB) *ExpenseRepository {
-	return &ExpenseRepository{db: db}
+func NewExpenseRepository(db *gorm.DB) ExpenseRepository {
+	return &expenseRepository{db: db}
 }
 
-func (r *ExpenseRepository) Create(expense *models.Expense) error {
+func (r *expenseRepository) Create(expense *models.Expense) error {
 	return r.db.Create(expense).Error
 }
 
-func (r *ExpenseRepository) FindByBranchID(branchID uuid.UUID, offset, limit int) ([]models.Expense, int64, error) {
+func (r *expenseRepository) FindByBranchID(branchID uuid.UUID, offset, limit int) ([]models.Expense, int64, error) {
 	var expenses []models.Expense
 	var total int64
 	r.db.Model(&models.Expense{}).Where("branch_id = ?", branchID).Count(&total)
@@ -68,7 +85,7 @@ func (r *ExpenseRepository) FindByBranchID(branchID uuid.UUID, offset, limit int
 	return expenses, total, err
 }
 
-func (r *ExpenseRepository) FindByID(id uuid.UUID) (*models.Expense, error) {
+func (r *expenseRepository) FindByID(id uuid.UUID) (*models.Expense, error) {
 	var expense models.Expense
 	err := r.db.Preload("Category").First(&expense, "id = ?", id).Error
 	if err != nil {
@@ -77,16 +94,16 @@ func (r *ExpenseRepository) FindByID(id uuid.UUID) (*models.Expense, error) {
 	return &expense, nil
 }
 
-func (r *ExpenseRepository) Update(expense *models.Expense) error {
+func (r *expenseRepository) Update(expense *models.Expense) error {
 	return r.db.Save(expense).Error
 }
 
-func (r *ExpenseRepository) Delete(id uuid.UUID) error {
+func (r *expenseRepository) Delete(id uuid.UUID) error {
 	return r.db.Delete(&models.Expense{}, "id = ?", id).Error
 }
 
 // SumByBranchAndDateRange returns total expenses for a branch in a date range.
-func (r *ExpenseRepository) SumByBranchAndDateRange(branchID uuid.UUID, start, end time.Time) (int64, error) {
+func (r *expenseRepository) SumByBranchAndDateRange(branchID uuid.UUID, start, end time.Time) (int64, error) {
 	var total int64
 	err := r.db.Model(&models.Expense{}).
 		Select("COALESCE(SUM(amount), 0)").
