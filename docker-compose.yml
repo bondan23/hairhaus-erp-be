@@ -1,0 +1,27 @@
+services:
+  db:
+    image: "postgres:17.5"
+    restart: always
+    volumes:
+      - ../database-backup:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: "T7l6PUBrhvWs"
+    ports:
+      - 5432:5432
+    container_name: hairhaus-pos-be-db
+    networks:
+      - hairhaus-network
+
+  redis:
+    image: "bitnami/redis:latest"
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - 6379:6379
+    container_name: hairhaus-pos-be-redis
+    networks:
+      - hairhaus-network
+
+networks:
+  hairhaus-network:
+    driver: bridge

@@ -1,0 +1,22 @@
+package models
+
+import "github.com/google/uuid"
+
+const (
+	RoleAdmin   = "ADMIN"
+	RoleManager = "MANAGER"
+	RoleCashier = "CASHIER"
+)
+
+// User represents a system user (admin, manager, or cashier).
+type User struct {
+	BaseModel
+	Name     string `gorm:"not null" json:"name"`
+	Email    string `gorm:"uniqueIndex;not null" json:"email"`
+	Password string `gorm:"not null" json:"-"`
+
+	Role string `gorm:"not null" json:"role"`
+
+	BranchID uuid.UUID `gorm:"type:uuid;not null" json:"branch_id"`
+	Branch   Branch    `gorm:"foreignKey:BranchID" json:"branch,omitempty"`
+}
