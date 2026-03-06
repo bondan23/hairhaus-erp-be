@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"hairhaus-pos-be/clients"
 	"hairhaus-pos-be/dto"
 	"hairhaus-pos-be/models"
 	"hairhaus-pos-be/repositories"
@@ -26,6 +27,7 @@ type TransactionService struct {
 	affCommRepo   *repositories.AffiliateCommissionRepository
 	smRepo        *repositories.StockMovementRepository
 	auditRepo     *repositories.AuditLogRepository
+	loyaltyClient *clients.LoyaltyClient
 }
 
 func NewTransactionService(
@@ -40,12 +42,14 @@ func NewTransactionService(
 	affCommRepo *repositories.AffiliateCommissionRepository,
 	smRepo *repositories.StockMovementRepository,
 	auditRepo *repositories.AuditLogRepository,
+	loyaltyClient *clients.LoyaltyClient,
 ) *TransactionService {
 	return &TransactionService{
 		txnRepo: txnRepo, branchRepo: branchRepo, bpRepo: bpRepo,
 		bsRepo: bsRepo, productRepo: productRepo, stylistRepo: stylistRepo,
 		drawerRepo: drawerRepo, affiliateRepo: affiliateRepo,
 		affCommRepo: affCommRepo, smRepo: smRepo, auditRepo: auditRepo,
+		loyaltyClient: loyaltyClient,
 	}
 }
 
@@ -146,20 +150,20 @@ func (s *TransactionService) Checkout(req dto.CheckoutRequest, userID uuid.UUID)
 			}
 
 			item := models.TransactionItem{
-				ProductID:            itemReq.ProductID,
-				StylistID:            itemReq.StylistID,
-				ProductNameSnapshot:  product.Name,
-				ProductTypeSnapshot:  product.ProductType,
-				CategoryNameSnapshot: product.Category.Name,
-				IncomeTypeSnapshot:   incomeType,
-				StylistNameSnapshot:  stylistName,
-				PriceSnapshot:        price,
-				Quantity:             itemReq.Quantity,
-				GrossSubtotal:        grossSubtotal,
-				ItemDiscount:         0,
-				NetSubtotal:          grossSubtotal,
+				ProductID:                itemReq.ProductID,
+				StylistID:                itemReq.StylistID,
+				ProductNameSnapshot:      product.Name,
+				ProductTypeSnapshot:      product.ProductType,
+				CategoryNameSnapshot:     product.Category.Name,
+				IncomeTypeSnapshot:       incomeType,
+				StylistNameSnapshot:      stylistName,
+				PriceSnapshot:            price,
+				Quantity:                 itemReq.Quantity,
+				GrossSubtotal:            grossSubtotal,
+				ItemDiscount:             0,
+				NetSubtotal:              grossSubtotal,
 				CommissionAmountSnapshot: commissionAmount,
-				CostPriceSnapshot:    product.CostPrice,
+				CostPriceSnapshot:        product.CostPrice,
 			}
 			items = append(items, item)
 			subtotal += grossSubtotal
@@ -213,17 +217,17 @@ func (s *TransactionService) Checkout(req dto.CheckoutRequest, userID uuid.UUID)
 
 		// Create transaction
 		txn = &models.Transaction{
-			InvoiceNo:      invoiceNo,
-			BranchID:       req.BranchID,
-			CustomerID:     req.CustomerID,
-			AffiliateID:    affiliateID,
-			SubtotalAmount: subtotal,
-			DiscountAmount: req.DiscountAmount,
-			TotalAmount:    totalAmount,
+			InvoiceNo:                         invoiceNo,
+			BranchID:                          req.BranchID,
+			CustomerID:                        req.CustomerID,
+			AffiliateID:                       affiliateID,
+			SubtotalAmount:                    subtotal,
+			DiscountAmount:                    req.DiscountAmount,
+			TotalAmount:                       totalAmount,
 			AffiliateCommissionAmountSnapshot: affiliateCommissionAmount,
-			Status:         models.TransactionStatusCompleted,
-			CashDrawerID:   drawer.ID,
-			IdempotencyKey: req.IdempotencyKey,
+			Status:                            models.TransactionStatusCompleted,
+			CashDrawerID:                      drawer.ID,
+			IdempotencyKey:                    req.IdempotencyKey,
 		}
 
 		if err := s.txnRepo.CreateWithTx(dbTx, txn); err != nil {

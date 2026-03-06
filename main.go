@@ -76,7 +76,7 @@ func main() {
 	transactionService := services.NewTransactionService(
 		transactionRepo, branchRepo, branchProductRepo, branchStylistRepo,
 		productRepo, stylistRepo, cashDrawerRepo, affiliateRepo,
-		affiliateCommRepo, stockMovementRepo, auditLogRepo,
+		affiliateCommRepo, stockMovementRepo, auditLogRepo, loyaltyClient,
 	)
 	inventoryService := services.NewInventoryService(branchProductRepo, stockMovementRepo)
 	affiliateService := services.NewAffiliateService(affiliateRepo, affiliateCommRepo)
@@ -97,9 +97,9 @@ func main() {
 		BranchStylist:   handlers.NewBranchStylistHandler(branchStylistService),
 		Customer:        handlers.NewCustomerHandler(customerService),
 		CashDrawer:      handlers.NewCashDrawerHandler(cashDrawerService),
-		Transaction:     handlers.NewTransactionHandler(transactionService, loyaltyClient),
+		Transaction:     handlers.NewTransactionHandler(transactionService),
 		Inventory:       handlers.NewInventoryHandler(inventoryService),
-		Affiliate:       handlers.NewAffiliateHandler(affiliateService, loyaltyClient),
+		Affiliate:       handlers.NewAffiliateHandler(affiliateService),
 		Salary:          handlers.NewSalaryHandler(salaryService),
 		ExpenseCategory: handlers.NewExpenseCategoryHandler(expenseCategoryService),
 		Expense:         handlers.NewExpenseHandler(expenseService),
