@@ -21,6 +21,15 @@ services:
     container_name: hairhaus-pos-be-redis
     networks:
       - hairhaus-network
+  
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8282:8080
+    container_name: hairhaus-pos-be-adminer
+    networks:
+      - hairhaus-network
 
 networks:
   hairhaus-network:
