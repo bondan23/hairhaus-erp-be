@@ -575,6 +575,35 @@ paths:
 
   # ==================== BRANCH STYLISTS ====================
   /branch-stylists:
+    get:
+      tags: [Branch Stylists]
+      summary: List all branch stylists across all branches
+      description: |
+        Returns a paginated list of all branch stylists. 
+        Can be optionally filtered by branch_id.
+      parameters:
+        - name: branch_id
+          in: query
+          description: Optional branch ID to filter by
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Paginated branch stylists
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/BranchStylist'
     post:
       tags: [Branch Stylists]
       summary: Assign stylist to branch with optional haircut price override
@@ -1648,6 +1677,9 @@ components:
           type: integer
           format: int64
           nullable: true
+        commission_percentage:
+          type: integer
+          nullable: true
 
     CreateBranchStylistRequest:
       type: object
@@ -1663,6 +1695,9 @@ components:
           type: integer
           format: int64
           nullable: true
+        commission_percentage:
+          type: integer
+          nullable: true
 
     UpdateBranchStylistRequest:
       type: object
@@ -1670,6 +1705,9 @@ components:
         haircut_price_override:
           type: integer
           format: int64
+          nullable: true
+        commission_percentage:
+          type: integer
           nullable: true
 
     # ---- Customer ----

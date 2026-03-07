@@ -137,6 +137,7 @@ func SetupRouter(h *Handlers, jwtSecret string) *gin.Engine {
 		// --- Branch Stylists ---
 		branchStylists := protected.Group("/branch-stylists")
 		{
+			branchStylists.GET("", h.BranchStylist.GetAll)
 			branchStylists.GET("/:id", h.BranchStylist.GetByID)
 			branchStylists.POST("", middleware.RequireRole(models.RoleAdmin, models.RoleManager), h.BranchStylist.Create)
 			branchStylists.PUT("/:id", middleware.RequireRole(models.RoleAdmin, models.RoleManager), h.BranchStylist.Update)

@@ -10,6 +10,7 @@ import (
 type BranchStylistRepository interface {
 	Create(bs *models.BranchStylist) error
 	FindByBranchID(branchID uuid.UUID, offset, limit int) ([]models.BranchStylist, int64, error)
+	FindAll(branchID *uuid.UUID, offset, limit int) ([]models.BranchStylist, int64, error)
 	FindByID(id uuid.UUID) (*models.BranchStylist, error)
 	FindByBranchAndStylist(branchID, stylistID uuid.UUID) (*models.BranchStylist, error)
 	Update(bs *models.BranchStylist) error
@@ -34,6 +35,23 @@ func (r *branchStylistRepository) FindByBranchID(branchID uuid.UUID, offset, lim
 	r.db.Model(&models.BranchStylist{}).Where("branch_id = ?", branchID).Count(&total)
 	err := r.db.Preload("Stylist").Where("branch_id = ?", branchID).
 		Offset(offset).Limit(limit).Find(&bss).Error
+	return bss, total, err
+}
+
+func (r *branchStylistRepository) FindAll(branchID *uuid.UUID, offset, limit int) ([]models.BranchStylist, int64, error) {
+	var bss []models.BranchStylist
+	var total int64
+
+	query := r.db.Model(&models.BranchStylist{})
+
+	if branchID != nil {
+		query = query.Where("branch_id = ?", *branchID)
+	}
+
+	query.Count(&total)
+
+	err := query.Preload("Stylist").Offset(offset).Limit(limit).Find(&bss).Error
+
 	return bss, total, err
 }
 

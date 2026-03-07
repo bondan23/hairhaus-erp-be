@@ -133,6 +133,28 @@ func (h *BranchStylistHandler) GetByBranch(c *gin.Context) {
 	utils.RespondPaginated(c, bss, page, pageSize, total)
 }
 
+func (h *BranchStylistHandler) GetAll(c *gin.Context) {
+	page, pageSize := utils.GetPaginationParams(c)
+
+	var branchIDPtr *uuid.UUID
+	branchIDStr := c.Query("branch_id")
+	if branchIDStr != "" {
+		parsedBranchID, err := uuid.Parse(branchIDStr)
+		if err != nil {
+			utils.RespondValidationError(c, "Invalid branch_id")
+			return
+		}
+		branchIDPtr = &parsedBranchID
+	}
+
+	bss, total, err := h.service.GetAll(branchIDPtr, utils.GetOffset(page, pageSize), pageSize)
+	if err != nil {
+		utils.RespondError(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	utils.RespondPaginated(c, bss, page, pageSize, total)
+}
+
 func (h *BranchStylistHandler) GetByID(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {

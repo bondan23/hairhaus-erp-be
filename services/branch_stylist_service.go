@@ -33,6 +33,10 @@ func (s *BranchStylistService) GetByBranch(branchID uuid.UUID, offset, limit int
 	return s.repo.FindByBranchID(branchID, offset, limit)
 }
 
+func (s *BranchStylistService) GetAll(branchID *uuid.UUID, offset, limit int) ([]models.BranchStylist, int64, error) {
+	return s.repo.FindAll(branchID, offset, limit)
+}
+
 func (s *BranchStylistService) GetByID(id uuid.UUID) (*models.BranchStylist, error) {
 	return s.repo.FindByID(id)
 }
@@ -42,12 +46,10 @@ func (s *BranchStylistService) Update(id uuid.UUID, req dto.UpdateBranchStylistR
 	if err != nil {
 		return nil, err
 	}
-	if req.HaircutPriceOverride != nil {
-		bs.HaircutPriceOverride = req.HaircutPriceOverride
-	}
-	if req.CommissionPercentage != nil {
-		bs.CommissionPercentage = req.CommissionPercentage
-	}
+
+	bs.HaircutPriceOverride = req.HaircutPriceOverride
+	bs.CommissionPercentage = req.CommissionPercentage
+
 	if err := s.repo.Update(bs); err != nil {
 		return nil, err
 	}
