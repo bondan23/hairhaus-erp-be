@@ -367,6 +367,182 @@ Examples:
 
 Expenses are used in Net Profit calculations.
 
+# **4.14 Customer Identification & Loyalty Integration**
+
+During POS transactions, the cashier must identify the customer using their phone number.
+The system will attempt to locate the customer in the following order:
+
+ERP Customer Database
+
+HAIRHAUS Loyalty Member Service
+
+New Customer Registration
+
+This process ensures that customer data is centralized and optionally integrated with the loyalty system.
+
+Customer Lookup Flow
+
+When the cashier inputs a phone number in the Transaction Screen, the system performs the following steps.
+
+Step 1 — Search ERP Customer Table
+
+The system first checks the internal ERP customer table.
+
+Lookup condition:
+
+customers.phone = input_phone_number
+If customer is found
+
+The system will:
+
+populate the customer information
+
+attach the customer to the transaction
+
+No additional steps are required.
+
+Step 2 — Check Loyalty Member API
+
+If the phone number is not found in the ERP customer table, the system will query the HAIRHAUS Loyalty Member API.
+
+Endpoint:
+
+POST /open/auth/check
+
+Input:
+
+phone_number
+If loyalty member is found
+
+The system will:
+
+retrieve the loyalty member data
+
+automatically create a new ERP customer record
+
+map the loyalty member ID to the ERP customer
+
+Example fields stored in ERP:
+
+customers
+----------------------------
+name
+phone
+gender
+loyalty_id
+
+Where:
+
+loyalty_id = loyalty_member.user_id
+
+The newly created ERP customer will then be attached to the transaction.
+
+Step 3 — Customer Not Found Anywhere
+
+If the phone number is not found in both systems, the POS will display a New Customer Form.
+
+Form fields:
+
+Name
+Gender
+Phone Number (auto-filled)
+
+Additionally, the system will request customer consent for loyalty registration.
+
+Loyalty Registration Consent
+
+The customer must choose whether they want their phone number to be registered in the HAIRHAUS Loyalty Program.
+
+Option presented:
+
+Do you want to register this number for HAIRHAUS Loyalty Membership?
+
+Choices:
+
+YES — Register to Loyalty
+NO — Only register in ERP
+
+# If Customer Consents to Loyalty Registration
+
+The following process occurs:
+
+* System sends OTP request to loyalty service
+* Customer verifies OTP
+* Loyalty member account is created
+* ERP creates customer record with loyalty_id reference
+
+Flow:
+
+POS → Loyalty API → OTP Verification (Go routine) → Loyalty Account Created
+                                                            ↓
+                                                    ERP Customer Created
+
+This flow ensure
+* customer data consistency
+* seamless loyalty integration
+* minimal disruption during POS transactions.
+
+
+ERP data example:
+
+customers
+----------------------------
+name
+phone
+gender
+loyalty_id
+
+# If Customer Declines Loyalty Registration
+
+The system will:
+
+* create a customer record only in the ERP database
+* leave loyalty_id as NULL
+
+Example:
+
+customers
+----------------------------
+name
+phone
+gender
+loyalty_id = null
+
+# The customer can still complete the transaction without loyalty integration.
+
+Customer Data Structure
+
+ERP customer table example:
+
+customers
+------------------------------------------------
+id
+name
+phone
+gender
+loyalty_id
+created_at
+updated_at
+
+Where:
+
+loyalty_id = external loyalty member identifier
+Key System Rules
+Phone Number is Primary Identifier
+
+Customer lookup is always performed using:
+
+phone_number
+Loyalty Integration is Optional
+
+Customers are allowed to:
+* use ERP without joining loyalty program
+
+Customer Creation Must Be Idempotent
+The system must prevent duplicate customers with the same phone number.
+Constraint:
+
+UNIQUE(phone)
 ---
 
 # **5\. FINANCIAL REPORTING**

@@ -20,6 +20,7 @@ func (s *CustomerService) Create(req dto.CreateCustomerRequest) (*models.Custome
 	customer := &models.Customer{
 		Name:              req.Name,
 		Phone:             req.Phone,
+		Gender:            req.Gender,
 		LoyaltyExternalID: req.LoyaltyExternalID,
 	}
 	if err := s.repo.Create(customer); err != nil {
@@ -49,6 +50,9 @@ func (s *CustomerService) Update(id uuid.UUID, req dto.UpdateCustomerRequest) (*
 	}
 	if req.LoyaltyExternalID != nil {
 		customer.LoyaltyExternalID = *req.LoyaltyExternalID
+	}
+	if req.Gender != nil {
+		customer.Gender = req.Gender
 	}
 	if err := s.repo.Update(customer); err != nil {
 		return nil, err

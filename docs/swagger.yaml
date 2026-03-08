@@ -1781,6 +1781,10 @@ components:
           example: "Ahmad"
         phone:
           type: string
+        gender:
+          type: string
+          enum: [Male, Female]
+          nullable: true
         loyalty_external_id:
           type: string
 
@@ -1791,6 +1795,10 @@ components:
           type: string
         phone:
           type: string
+        gender:
+          type: string
+          enum: [Male, Female]
+          nullable: true
         loyalty_external_id:
           type: string
 

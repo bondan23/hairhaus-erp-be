@@ -2,6 +2,8 @@ package dto
 
 import "github.com/google/uuid"
 
+// IMPORTANT!!! PLEASE UPDATE SWAGGER DOCS IF YOU UPDATE THIS FILE
+
 // ===== Auth =====
 type LoginRequest struct {
 	PhoneNumber string `json:"phone_number" binding:"required"`
@@ -125,14 +127,16 @@ type UpdateBranchStylistRequest struct {
 
 // ===== Customer =====
 type CreateCustomerRequest struct {
-	Name              string `json:"name" binding:"required"`
-	Phone             string `json:"phone"`
-	LoyaltyExternalID string `json:"loyalty_external_id"`
+	Name              string  `json:"name" binding:"required"`
+	Phone             string  `json:"phone"`
+	Gender            *string `json:"gender" binding:"omitempty,oneof=MALE FEMALE Male Female"`
+	LoyaltyExternalID string  `json:"loyalty_external_id"`
 }
 
 type UpdateCustomerRequest struct {
 	Name              *string `json:"name"`
 	Phone             *string `json:"phone"`
+	Gender            *string `json:"gender" binding:"omitempty,oneof=MALE FEMALE Male Female"`
 	LoyaltyExternalID *string `json:"loyalty_external_id"`
 }
 
