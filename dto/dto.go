@@ -167,9 +167,10 @@ type SaveTransactionRequest struct {
 }
 
 type CheckoutItemRequest struct {
-	ProductID uuid.UUID  `json:"product_id" binding:"required"`
-	StylistID *uuid.UUID `json:"stylist_id"`
-	Quantity  int64      `json:"quantity" binding:"required,min=1"`
+	ProductID      uuid.UUID  `json:"product_id" binding:"required"`
+	StylistID      *uuid.UUID `json:"stylist_id"`
+	Quantity       int64      `json:"quantity" binding:"required,min=1"`
+	DiscountAmount int64      `json:"discount_amount" binding:"min=0"`
 }
 
 type PaymentRequest struct {

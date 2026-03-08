@@ -2025,6 +2025,11 @@ components:
           type: integer
           format: int64
           minimum: 1
+        discount_amount:
+          type: integer
+          format: int64
+          minimum: 0
+          default: 0
 
     PaymentRequest:
       type: object

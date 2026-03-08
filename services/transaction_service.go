@@ -76,6 +76,25 @@ func (s *TransactionService) SaveTransaction(req dto.SaveTransactionRequest, use
 		affiliate = aff
 	}
 
+	// XOR Discount Check
+	var hasItemDiscounts bool
+	var sumItemDiscounts int64
+
+	for _, item := range req.Items {
+		if item.DiscountAmount > 0 {
+			hasItemDiscounts = true
+			sumItemDiscounts += item.DiscountAmount
+		}
+	}
+
+	if hasItemDiscounts && req.DiscountAmount > 0 {
+		return nil, errors.New("cannot apply both item-level discounts and a transaction-level discount")
+	}
+
+	if hasItemDiscounts {
+		req.DiscountAmount = sumItemDiscounts
+	}
+
 	count, _ := s.txnRepo.CountTodayByBranch(req.BranchID)
 	invoiceNo := utils.GenerateInvoiceNo(branch.Code, count+1)
 
@@ -117,6 +136,11 @@ func (s *TransactionService) SaveTransaction(req dto.SaveTransactionRequest, use
 			}
 
 			grossSubtotal := price * itemReq.Quantity
+			itemDiscount := itemReq.DiscountAmount
+			netSubtotal := grossSubtotal - itemDiscount
+			if netSubtotal < 0 {
+				return errors.New("item discount cannot exceed the gross subtotal")
+			}
 
 			var stylistName string
 			if itemReq.StylistID != nil {
@@ -128,12 +152,13 @@ func (s *TransactionService) SaveTransaction(req dto.SaveTransactionRequest, use
 
 			var commissionAmount int64
 			if product.ProductType == models.ProductTypeService && itemReq.StylistID != nil {
-				commissionableAmount := grossSubtotal
+				commissionableAmount := grossSubtotal // Stylist gets full commission regardless of discount
 				if incomeType == models.IncomeTypeTreatment && product.CostPrice > 0 {
 					itemMargin := price - product.CostPrice
 					if itemMargin < 0 {
 						itemMargin = 0
 					}
+					// CORRECT: Do not subtract the discount from the stylist's margin
 					commissionableAmount = itemMargin * itemReq.Quantity
 				}
 
@@ -156,8 +181,8 @@ func (s *TransactionService) SaveTransaction(req dto.SaveTransactionRequest, use
 				PriceSnapshot:            price,
 				Quantity:                 itemReq.Quantity,
 				GrossSubtotal:            grossSubtotal,
-				ItemDiscount:             0,
-				NetSubtotal:              grossSubtotal,
+				ItemDiscount:             itemDiscount,
+				NetSubtotal:              netSubtotal,
 				CommissionAmountSnapshot: commissionAmount,
 				CostPriceSnapshot:        product.CostPrice,
 			}
@@ -261,6 +286,25 @@ func (s *TransactionService) Checkout(req dto.CheckoutRequest, userID uuid.UUID)
 		invoiceNo = utils.GenerateInvoiceNo(branch.Code, count+1)
 	}
 
+	// XOR Discount Check
+	var hasItemDiscounts bool
+	var sumItemDiscounts int64
+
+	for _, item := range req.Items {
+		if item.DiscountAmount > 0 {
+			hasItemDiscounts = true
+			sumItemDiscounts += item.DiscountAmount
+		}
+	}
+
+	if hasItemDiscounts && req.DiscountAmount > 0 {
+		return nil, errors.New("cannot apply both item-level discounts and a transaction-level discount")
+	}
+
+	if hasItemDiscounts {
+		req.DiscountAmount = sumItemDiscounts
+	}
+
 	// Run everything in a single DB transaction
 	db := s.txnRepo.DB()
 	var txn *models.Transaction
@@ -302,6 +346,11 @@ func (s *TransactionService) Checkout(req dto.CheckoutRequest, userID uuid.UUID)
 			}
 
 			grossSubtotal := price * itemReq.Quantity
+			itemDiscount := itemReq.DiscountAmount
+			netSubtotal := grossSubtotal - itemDiscount
+			if netSubtotal < 0 {
+				return errors.New("item discount cannot exceed the gross subtotal")
+			}
 
 			// Stylist snapshot
 			var stylistName string
@@ -324,6 +373,7 @@ func (s *TransactionService) Checkout(req dto.CheckoutRequest, userID uuid.UUID)
 					if itemMargin < 0 {
 						itemMargin = 0 // Bounds check to prevent negative commission
 					}
+					// CORRECT: Do not subtract the discount from the stylist's margin
 					commissionableAmount = itemMargin * itemReq.Quantity
 				}
 
@@ -347,8 +397,8 @@ func (s *TransactionService) Checkout(req dto.CheckoutRequest, userID uuid.UUID)
 				PriceSnapshot:            price,
 				Quantity:                 itemReq.Quantity,
 				GrossSubtotal:            grossSubtotal,
-				ItemDiscount:             0,
-				NetSubtotal:              grossSubtotal,
+				ItemDiscount:             itemDiscount,
+				NetSubtotal:              netSubtotal,
 				CommissionAmountSnapshot: commissionAmount,
 				CostPriceSnapshot:        product.CostPrice,
 			}
@@ -512,6 +562,25 @@ func (s *TransactionService) EditTransaction(txnID uuid.UUID, req dto.EditTransa
 		return nil, errors.New("transaction cannot be edited: drawer is not open")
 	}
 
+	// XOR Discount Check
+	var hasItemDiscounts bool
+	var sumItemDiscounts int64
+
+	for _, item := range req.Items {
+		if item.DiscountAmount > 0 {
+			hasItemDiscounts = true
+			sumItemDiscounts += item.DiscountAmount
+		}
+	}
+
+	if hasItemDiscounts && req.DiscountAmount != nil && *req.DiscountAmount > 0 {
+		return nil, errors.New("cannot apply both item-level discounts and a transaction-level discount")
+	}
+
+	if hasItemDiscounts {
+		req.DiscountAmount = &sumItemDiscounts
+	}
+
 	oldData, _ := json.Marshal(map[string]interface{}{
 		"discount_amount": txn.DiscountAmount,
 		"total_amount":    txn.TotalAmount,
@@ -570,6 +639,16 @@ func (s *TransactionService) EditTransaction(txnID uuid.UUID, req dto.EditTransa
 
 			grossSubtotal := price * itemReq.Quantity
 
+			discountVal := itemReq.DiscountAmount
+			if discountVal < 0 {
+				return errors.New("item discount must be positive")
+			}
+
+			netSubtotal := grossSubtotal - discountVal
+			if netSubtotal < 0 {
+				return errors.New("item discount cannot exceed the gross subtotal")
+			}
+
 			// Stylist snapshot
 			var stylistName string
 			if itemReq.StylistID != nil {
@@ -591,6 +670,7 @@ func (s *TransactionService) EditTransaction(txnID uuid.UUID, req dto.EditTransa
 					if itemMargin < 0 {
 						itemMargin = 0 // Bounds check to prevent negative commission
 					}
+					// CORRECT: Do not subtract the discount from the stylist's margin
 					commissionableAmount = itemMargin * itemReq.Quantity
 				}
 
@@ -615,8 +695,8 @@ func (s *TransactionService) EditTransaction(txnID uuid.UUID, req dto.EditTransa
 				PriceSnapshot:            price,
 				Quantity:                 itemReq.Quantity,
 				GrossSubtotal:            grossSubtotal,
-				ItemDiscount:             0,
-				NetSubtotal:              grossSubtotal,
+				ItemDiscount:             discountVal,
+				NetSubtotal:              netSubtotal,
 				CommissionAmountSnapshot: commissionAmount,
 				CostPriceSnapshot:        product.CostPrice,
 			}
