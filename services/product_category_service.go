@@ -1,6 +1,9 @@
 package services
 
 import (
+	"errors"
+	"strings"
+
 	"hairhaus-pos-be/dto"
 	"hairhaus-pos-be/models"
 	"hairhaus-pos-be/repositories"
@@ -41,6 +44,9 @@ func (s *ProductCategoryService) Update(id uuid.UUID, req dto.UpdateProductCateg
 		cat.Name = *req.Name
 	}
 	if req.Code != nil {
+		if strings.ToUpper(cat.Code) == models.CategoryCodeHaircut && strings.ToUpper(*req.Code) != models.CategoryCodeHaircut {
+			return nil, errors.New("cannot change the code of the system HAIRCUT category")
+		}
 		cat.Code = *req.Code
 	}
 	if err := s.repo.Update(cat); err != nil {
@@ -50,5 +56,9 @@ func (s *ProductCategoryService) Update(id uuid.UUID, req dto.UpdateProductCateg
 }
 
 func (s *ProductCategoryService) Delete(id uuid.UUID) error {
+	cat, err := s.repo.FindByID(id)
+	if err == nil && strings.ToUpper(cat.Code) == models.CategoryCodeHaircut {
+		return errors.New("cannot delete the core HAIRCUT system category")
+	}
 	return s.repo.Delete(id)
 }

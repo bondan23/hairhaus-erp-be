@@ -1,5 +1,9 @@
 package models
 
+const (
+	CategoryCodeHaircut = "HAIRCUT"
+)
+
 // ProductCategory represents a category for products/services.
 type ProductCategory struct {
 	BaseModel

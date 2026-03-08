@@ -107,6 +107,44 @@ func NewTransactionHandler(service *services.TransactionService) *TransactionHan
 	return &TransactionHandler{service: service}
 }
 
+func (h *TransactionHandler) Save(c *gin.Context) {
+	var req dto.SaveTransactionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.RespondValidationError(c, err.Error())
+		return
+	}
+	userID := c.MustGet("user_id").(uuid.UUID)
+	txn, err := h.service.SaveTransaction(req, userID)
+	if err != nil {
+		utils.RespondError(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	utils.RespondCreated(c, "Transaction saved as draft", txn)
+}
+
+func (h *TransactionHandler) CheckoutDraft(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		utils.RespondValidationError(c, "Invalid draft ID")
+		return
+	}
+
+	var req dto.CheckoutRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.RespondValidationError(c, err.Error())
+		return
+	}
+	req.TransactionID = &id
+
+	userID := c.MustGet("user_id").(uuid.UUID)
+	txn, err := h.service.Checkout(req, userID)
+	if err != nil {
+		utils.RespondError(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	utils.RespondSuccess(c, "Transaction completed", txn)
+}
+
 func (h *TransactionHandler) Checkout(c *gin.Context) {
 	var req dto.CheckoutRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

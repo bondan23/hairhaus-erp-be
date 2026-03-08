@@ -66,6 +66,8 @@ func (r *affiliateRepository) Delete(id uuid.UUID) error {
 type AffiliateCommissionRepository interface {
 	CreateWithTx(tx *gorm.DB, ac *models.AffiliateCommission) error
 	FindByAffiliateID(affiliateID uuid.UUID, offset, limit int) ([]models.AffiliateCommission, int64, error)
+	FindByTransactionID(txnID uuid.UUID) (*models.AffiliateCommission, error)
+	UpdateWithTx(tx *gorm.DB, ac *models.AffiliateCommission) error
 }
 
 type affiliateCommissionRepository struct {
@@ -87,4 +89,17 @@ func (r *affiliateCommissionRepository) FindByAffiliateID(affiliateID uuid.UUID,
 	err := r.db.Preload("Transaction").Where("affiliate_id = ?", affiliateID).
 		Offset(offset).Limit(limit).Find(&commissions).Error
 	return commissions, total, err
+}
+
+func (r *affiliateCommissionRepository) FindByTransactionID(txnID uuid.UUID) (*models.AffiliateCommission, error) {
+	var ac models.AffiliateCommission
+	err := r.db.Where("transaction_id = ?", txnID).First(&ac).Error
+	if err != nil {
+		return nil, err
+	}
+	return &ac, nil
+}
+
+func (r *affiliateCommissionRepository) UpdateWithTx(tx *gorm.DB, ac *models.AffiliateCommission) error {
+	return tx.Save(ac).Error
 }

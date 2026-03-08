@@ -12,6 +12,8 @@ type TransactionRepository interface {
 	CreateWithTx(tx *gorm.DB, txn *models.Transaction) error
 	CreateItemWithTx(tx *gorm.DB, item *models.TransactionItem) error
 	CreatePaymentWithTx(tx *gorm.DB, payment *models.Payment) error
+	DeleteItemsWithTx(tx *gorm.DB, txnID uuid.UUID) error
+	DeletePaymentsWithTx(tx *gorm.DB, txnID uuid.UUID) error
 	FindByID(id uuid.UUID) (*models.Transaction, error)
 	FindByIdempotencyKey(key string) (*models.Transaction, error)
 	FindByBranchID(branchID uuid.UUID, offset, limit int) ([]models.Transaction, int64, error)
@@ -44,6 +46,14 @@ func (r *transactionRepository) CreateItemWithTx(tx *gorm.DB, item *models.Trans
 
 func (r *transactionRepository) CreatePaymentWithTx(tx *gorm.DB, payment *models.Payment) error {
 	return tx.Create(payment).Error
+}
+
+func (r *transactionRepository) DeleteItemsWithTx(tx *gorm.DB, txnID uuid.UUID) error {
+	return tx.Where("transaction_id = ?", txnID).Delete(&models.TransactionItem{}).Error
+}
+
+func (r *transactionRepository) DeletePaymentsWithTx(tx *gorm.DB, txnID uuid.UUID) error {
+	return tx.Where("transaction_id = ?", txnID).Delete(&models.Payment{}).Error
 }
 
 func (r *transactionRepository) FindByID(id uuid.UUID) (*models.Transaction, error) {

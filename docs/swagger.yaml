@@ -778,6 +778,33 @@ paths:
           description: Drawer is not open
 
   # ==================== TRANSACTIONS ====================
+  /transactions/save:
+    post:
+      tags: [Transactions]
+      summary: Save a draft transaction
+      description: |
+        Saves a transaction as a DRAFT. It does not deduct stock or require payments.
+        **Roles:** ADMIN, MANAGER, CASHIER
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveTransactionRequest'
+      responses:
+        '201':
+          description: Draft transaction saved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - properties:
+                      data:
+                        $ref: '#/components/schemas/Transaction'
+        '400':
+          description: Validation error
+
   /transactions/checkout:
     post:
       tags: [Transactions]
@@ -812,6 +839,40 @@ paths:
                         $ref: '#/components/schemas/Transaction'
         '400':
           description: Validation error, insufficient stock, or payment mismatch
+
+  /transactions/{id}/checkout:
+    post:
+      tags: [Transactions]
+      summary: Checkout a draft transaction
+      description: |
+        Completes an existing DRAFT transaction:
+        - Deducts inventory
+        - Creates stock movements
+        - Calculates affiliate commission
+        - Validates payments
+        - Updates status to COMPLETED
+        **Roles:** ADMIN, MANAGER, CASHIER
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckoutRequest'
+      responses:
+        '200':
+          description: Transaction completed
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - properties:
+                      data:
+                        $ref: '#/components/schemas/Transaction'
+        '400':
+          description: Validation error or draft not found
 
   /transactions/{id}:
     get:
@@ -1892,15 +1953,19 @@ components:
 
     CheckoutRequest:
       type: object
-      required: [branch_id, items, payments, idempotency_key]
+      required: [branch_id, customer_id, items, payments, idempotency_key]
       properties:
+        transaction_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: "ID of the draft transaction if completing a draft"
         branch_id:
           type: string
           format: uuid
         customer_id:
           type: string
           format: uuid
-          nullable: true
         affiliate_code:
           type: string
           example: "REF-AHMAD"
@@ -1921,6 +1986,29 @@ components:
         idempotency_key:
           type: string
           example: "txn-abc123-unique"
+
+    SaveTransactionRequest:
+      type: object
+      required: [branch_id, customer_id, items]
+      properties:
+        branch_id:
+          type: string
+          format: uuid
+        customer_id:
+          type: string
+          format: uuid
+        affiliate_code:
+          type: string
+          example: "REF-AHMAD"
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/CheckoutItemRequest'
+        discount_amount:
+          type: integer
+          format: int64
+          default: 0
 
     CheckoutItemRequest:
       type: object
@@ -1954,8 +2042,18 @@ components:
 
     EditTransactionRequest:
       type: object
-      required: [edit_reason]
+      required: [items, payments, edit_reason]
       properties:
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/CheckoutItemRequest'
+        payments:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/PaymentRequest'
         discount_amount:
           type: integer
           format: int64

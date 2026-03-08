@@ -148,13 +148,22 @@ type CloseDrawerRequest struct {
 
 // ===== Transaction / POS =====
 type CheckoutRequest struct {
-	BranchID       uuid.UUID          `json:"branch_id" binding:"required"`
-	CustomerID     *uuid.UUID         `json:"customer_id"`
-	AffiliateCode  string             `json:"affiliate_code"`
+	TransactionID  *uuid.UUID            `json:"transaction_id"`
+	BranchID       uuid.UUID             `json:"branch_id" binding:"required"`
+	CustomerID     uuid.UUID             `json:"customer_id" binding:"required"`
+	AffiliateCode  string                `json:"affiliate_code"`
 	Items          []CheckoutItemRequest `json:"items" binding:"required,min=1,dive"`
-	Payments       []PaymentRequest   `json:"payments" binding:"required,min=1,dive"`
-	DiscountAmount int64              `json:"discount_amount" binding:"min=0"`
-	IdempotencyKey string             `json:"idempotency_key" binding:"required"`
+	Payments       []PaymentRequest      `json:"payments" binding:"required,min=1,dive"`
+	DiscountAmount int64                 `json:"discount_amount" binding:"min=0"`
+	IdempotencyKey string                `json:"idempotency_key" binding:"required"`
+}
+
+type SaveTransactionRequest struct {
+	BranchID       uuid.UUID             `json:"branch_id" binding:"required"`
+	CustomerID     uuid.UUID             `json:"customer_id" binding:"required"`
+	AffiliateCode  string                `json:"affiliate_code"`
+	Items          []CheckoutItemRequest `json:"items" binding:"required,min=1,dive"`
+	DiscountAmount int64                 `json:"discount_amount" binding:"min=0"`
 }
 
 type CheckoutItemRequest struct {
@@ -171,8 +180,10 @@ type PaymentRequest struct {
 
 // ===== Transaction Edit =====
 type EditTransactionRequest struct {
-	DiscountAmount *int64  `json:"discount_amount"`
-	EditReason     string  `json:"edit_reason" binding:"required"`
+	Items          []CheckoutItemRequest `json:"items" binding:"required,min=1,dive"`
+	Payments       []PaymentRequest      `json:"payments" binding:"required,min=1,dive"`
+	DiscountAmount *int64                `json:"discount_amount"`
+	EditReason     string                `json:"edit_reason" binding:"required"`
 }
 
 type EditPaymentRequest struct {
@@ -256,11 +267,11 @@ type ReportFilter struct {
 }
 
 type FinancialReport struct {
-	Revenue     int64 `json:"revenue"`
+	Revenue     int64         `json:"revenue"`
 	COGS        COGSBreakdown `json:"cogs"`
-	GrossProfit int64 `json:"gross_profit"`
-	OPEX        int64 `json:"opex"`
-	NetProfit   int64 `json:"net_profit"`
+	GrossProfit int64         `json:"gross_profit"`
+	OPEX        int64         `json:"opex"`
+	NetProfit   int64         `json:"net_profit"`
 }
 
 type COGSBreakdown struct {
