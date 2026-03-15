@@ -43,10 +43,10 @@ func (c *LoyaltyClient) NewRequest(cCtx *gin.Context, method, path string) (*htt
 	req.Header.Set("Content-Type", "application/json")
 
 	// Context-specific tracking headers from JWT payload
-	if employeeID, ok := cCtx.Get("employee_id"); ok {
+	if employeeID, ok := cCtx.Get("loyalty_employee_id"); ok {
 		req.Header.Set("x-employee-id", fmt.Sprintf("%s", employeeID))
 	}
-	if outletID, ok := cCtx.Get("outlet_id"); ok {
+	if outletID, ok := cCtx.Get("loyalty_outlet_id"); ok {
 		req.Header.Set("x-location-id", fmt.Sprintf("%s", outletID))
 	}
 

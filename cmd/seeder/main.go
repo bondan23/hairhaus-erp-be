@@ -31,13 +31,14 @@ func main() {
 		return string(hash)
 	}
 
-	// Helper for pointer ints
+	// Helper for pointer types
 	intPtr := func(i int64) *int64 { return &i }
+	stringPtr := func(s string) *string { return &s }
 
 	// --- 1. INDEPENDENT TABLES ---
 	fmt.Println("Seeding Branches...")
-	branchPusat := models.Branch{Code: "BKS", Name: "HAIRHAUS Bekasi", Address: "Jl. Sudirman No 1", Phone: "08123456789", OutletID: "cm1tntou2000611xf7cpkhb7r", IsActive: true}
-	branchCabang := models.Branch{Code: "KNG", Name: "HAIRHAUS Kuningan", Address: "Jl. Thamrin No 2", Phone: "08198765432", OutletID: "cm1tntuli000711xfo7cbgz3k", IsActive: true}
+	branchPusat := models.Branch{Code: "BKS", Name: "HAIRHAUS Bekasi", Address: "Jl. Sudirman No 1", Phone: "08123456789", LoyaltyOutletID: "cm1tntou2000611xf7cpkhb7r", IsActive: true}
+	branchCabang := models.Branch{Code: "KNG", Name: "HAIRHAUS Kuningan", Address: "Jl. Thamrin No 2", Phone: "08198765432", LoyaltyOutletID: "cm1tntuli000711xfo7cbgz3k", IsActive: true}
 	db.FirstOrCreate(&branchPusat, models.Branch{Code: "BKS"})
 	db.FirstOrCreate(&branchCabang, models.Branch{Code: "KNG"})
 
@@ -56,14 +57,14 @@ func main() {
 	db.FirstOrCreate(&stylistDjarot, models.Stylist{Name: "Fika"})
 
 	fmt.Println("Seeding Customers...")
-	customer1 := models.Customer{Name: "Budi", Phone: "081111111", LoyaltyExternalID: "LYL001"}
-	customer2 := models.Customer{Name: "Andi", Phone: "082222222", LoyaltyExternalID: "LYL002"}
+	customer1 := models.Customer{Name: "Budi", Phone: "081111111", LoyaltyUserID: stringPtr("LYL001")}
+	customer2 := models.Customer{Name: "Andi", Phone: "082222222", LoyaltyUserID: stringPtr("LYL002")}
 	db.FirstOrCreate(&customer1, models.Customer{Phone: "081111111"})
 	db.FirstOrCreate(&customer2, models.Customer{Phone: "082222222"})
 
 	fmt.Println("Seeding Affiliates...")
 	affiliate1 := models.Affiliate{
-		LoyaltyMemberID:      "LYL003",
+		LoyaltyUserID:        "LYL003",
 		AffiliateCode:        "AFF-PROMO",
 		Name:                 "Promo Partner",
 		CommissionType:       "PERCENTAGE",
@@ -81,9 +82,9 @@ func main() {
 	// --- 2. FIRST-LEVEL DEPENDENT ---
 	fmt.Println("Seeding Users...")
 	users := []models.User{
-		{Name: "Admin", PhoneNumber: "082210001000", EmployeeID: "EMP001", Pin: hashPassword("0808"), Role: models.RoleAdmin, BranchID: branchPusat.ID},
-		{Name: "Manager Pusat", PhoneNumber: "082299990359", EmployeeID: "EMP002", Pin: hashPassword("0808"), Role: models.RoleManager, BranchID: branchPusat.ID},
-		{Name: "Cashier Pusat", PhoneNumber: "082210007020", EmployeeID: "EMP003", Pin: hashPassword("0808"), Role: models.RoleCashier, BranchID: branchPusat.ID},
+		{Name: "Admin", PhoneNumber: "082210001000", LoyaltyEmployeeID: "EMP001", Pin: hashPassword("0808"), Role: models.RoleAdmin, BranchID: branchPusat.ID},
+		{Name: "Manager Pusat", PhoneNumber: "082299990359", LoyaltyEmployeeID: "EMP002", Pin: hashPassword("0808"), Role: models.RoleManager, BranchID: branchPusat.ID},
+		{Name: "Cashier Pusat", PhoneNumber: "082210007020", LoyaltyEmployeeID: "EMP003", Pin: hashPassword("0808"), Role: models.RoleCashier, BranchID: branchPusat.ID},
 	}
 	for _, u := range users {
 		db.FirstOrCreate(&u, models.User{PhoneNumber: u.PhoneNumber})

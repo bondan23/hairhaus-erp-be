@@ -1530,10 +1530,10 @@ components:
         id:
           type: string
           format: uuid
-        employee_id:
+        loyalty_employee_id:
           type: string
-          description: HAIRHAUS Loyalty ID
-        outlet_id:
+          description: HAIRHAUS Loyalty Employee ID
+        loyalty_outlet_id:
           type: string
           description: HAIRHAUS Loyalty Outlet ID
         name:
@@ -1560,7 +1560,7 @@ components:
         code:
           type: string
           example: "HH-MTG"
-        outlet_id:
+        loyalty_outlet_id:
           type: string
           description: HAIRHAUS Loyalty Outlet ID
           example: "OUT-001"
@@ -1587,7 +1587,7 @@ components:
         code:
           type: string
           example: "HH-MTG"
-        outlet_id:
+        loyalty_outlet_id:
           type: string
           description: HAIRHAUS Loyalty Outlet ID
           example: "OUT-001"
@@ -1611,12 +1611,12 @@ components:
     # ---- User ----
     CreateUserRequest:
       type: object
-      required: [employee_id, name, phone_number, pin, role, branch_id]
+      required: [loyalty_employee_id, name, phone_number, pin, role, branch_id]
       properties:
-        employee_id:
+        loyalty_employee_id:
           type: string
-          description: HAIRHAUS Loyalty ID (manually input)
-          example: "EMP-001"
+          description: HAIRHAUS Loyalty EmployeeID (role != GUEST)
+          example: "cm1tnuu86000f11xfk56pfgpi"
         name:
           type: string
           example: "John Doe"
@@ -1637,7 +1637,7 @@ components:
     UpdateUserRequest:
       type: object
       properties:
-        employee_id:
+        loyalty_employee_id:
           type: string
         name:
           type: string
@@ -1871,7 +1871,10 @@ components:
           type: string
           enum: [Male, Female]
           nullable: true
-        loyalty_external_id:
+        loyalty_user_id:
+          type: string
+          nullable: true
+        loyalty_outlet_id:
           type: string
           nullable: true
         is_loyalty_verified:
@@ -1983,8 +1986,12 @@ components:
           type: string
           enum: [Male, Female]
           nullable: true
-        loyalty_external_id:
+        loyalty_user_id:
           type: string
+          nullable: true
+        loyalty_outlet_id:
+          type: string
+          nullable: true
 
     UpdateCustomerRequest:
       type: object
@@ -1997,8 +2004,12 @@ components:
           type: string
           enum: [Male, Female]
           nullable: true
-        loyalty_external_id:
+        loyalty_user_id:
           type: string
+          nullable: true
+        loyalty_outlet_id:
+          type: string
+          nullable: true
 
     # ---- Cash Drawer ----
     CashDrawer:
@@ -2310,9 +2321,9 @@ components:
     # ---- Affiliate ----
     CreateAffiliateRequest:
       type: object
-      required: [loyalty_member_id, affiliate_code, name, commission_type]
+      required: [loyalty_user_id, affiliate_code, name, commission_type]
       properties:
-        loyalty_member_id:
+        loyalty_user_id:
           type: string
         affiliate_code:
           type: string

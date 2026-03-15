@@ -24,12 +24,12 @@ func (s *UserService) Create(req dto.CreateUserRequest) (*models.User, error) {
 	}
 
 	user := &models.User{
-		EmployeeID:  req.EmployeeID,
-		Name:        req.Name,
-		PhoneNumber: req.PhoneNumber,
-		Pin:         hashedPin,
-		Role:        req.Role,
-		BranchID:    req.BranchID,
+		LoyaltyEmployeeID: req.LoyaltyEmployeeID,
+		Name:              req.Name,
+		PhoneNumber:       req.PhoneNumber,
+		Pin:               hashedPin,
+		Role:              req.Role,
+		BranchID:          req.BranchID,
 	}
 	if err := s.repo.Create(user); err != nil {
 		return nil, err
@@ -50,8 +50,8 @@ func (s *UserService) Update(id uuid.UUID, req dto.UpdateUserRequest) (*models.U
 	if err != nil {
 		return nil, err
 	}
-	if req.EmployeeID != nil {
-		user.EmployeeID = *req.EmployeeID
+	if req.LoyaltyEmployeeID != nil {
+		user.LoyaltyEmployeeID = *req.LoyaltyEmployeeID
 	}
 	if req.Name != nil {
 		user.Name = *req.Name

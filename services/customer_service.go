@@ -22,10 +22,11 @@ func NewCustomerService(repo repositories.CustomerRepository) *CustomerService {
 
 func (s *CustomerService) Create(req dto.CreateCustomerRequest) (*models.Customer, error) {
 	customer := &models.Customer{
-		Name:              req.Name,
-		Phone:             req.Phone,
-		Gender:            req.Gender,
-		LoyaltyExternalID: req.LoyaltyExternalID,
+		Name:            req.Name,
+		Phone:           req.Phone,
+		Gender:          req.Gender,
+		LoyaltyUserID:   req.LoyaltyUserID,
+		LoyaltyOutletID: req.LoyaltyOutletID,
 	}
 	if err := s.repo.Create(customer); err != nil {
 		return nil, err
@@ -52,8 +53,11 @@ func (s *CustomerService) Update(id uuid.UUID, req dto.UpdateCustomerRequest) (*
 	if req.Phone != nil {
 		customer.Phone = *req.Phone
 	}
-	if req.LoyaltyExternalID != nil {
-		customer.LoyaltyExternalID = *req.LoyaltyExternalID
+	if req.LoyaltyUserID != nil {
+		customer.LoyaltyUserID = req.LoyaltyUserID
+	}
+	if req.LoyaltyOutletID != nil {
+		customer.LoyaltyOutletID = req.LoyaltyOutletID
 	}
 	if req.Gender != nil {
 		customer.Gender = req.Gender
@@ -86,7 +90,7 @@ func (s *CustomerService) Identify(cCtx *gin.Context, phone string, loyaltyClien
 	if (loyaltyResp.UserStatus == "Verified" || loyaltyResp.UserStatus == "NotVerified") && loyaltyResp.UserID != nil {
 		newCustomer := &models.Customer{
 			Phone:             phone,
-			LoyaltyExternalID: *loyaltyResp.UserID,
+			LoyaltyUserID:     loyaltyResp.UserID,
 			IsLoyaltyVerified: loyaltyResp.UserStatus == "Verified",
 		}
 
@@ -124,7 +128,7 @@ func (s *CustomerService) Register(cCtx *gin.Context, req dto.RegisterLoyaltyReq
 		Name:              req.Name,
 		Phone:             req.Phone,
 		Gender:            &req.Gender,
-		LoyaltyExternalID: userID,
+		LoyaltyUserID:     &userID,
 		IsLoyaltyVerified: false,
 	}
 	return s.repo.Create(customer)

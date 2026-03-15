@@ -6,6 +6,7 @@ type Customer struct {
 	Name              string  `gorm:"not null" json:"name"`
 	Phone             string  `json:"phone"`
 	Gender            *string `json:"gender"`
-	LoyaltyExternalID string  `json:"loyalty_external_id"`
+	LoyaltyUserID     *string `json:"loyalty_user_id"`
+	LoyaltyOutletID   *string `json:"loyalty_outlet_id"`
 	IsLoyaltyVerified bool    `gorm:"default:false" json:"is_loyalty_verified"`
 }

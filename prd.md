@@ -328,7 +328,7 @@ Affiliate system integrates with the loyalty member service.
 
 Affiliate data includes:
 
-* loyaltyMemberId  
+* LoyaltyUserID  
 * affiliateCode  
 * commissionType  
 * commissionValue

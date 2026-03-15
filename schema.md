@@ -146,7 +146,7 @@ type Customer struct {
 	Name  string  
 	Phone string
 
-	LoyaltyExternalID string  
+	LoyaltyUserID string  
 }  
 ---
 
@@ -155,7 +155,7 @@ type Customer struct {
 type Affiliate struct {  
 	BaseModel
 
-	LoyaltyMemberID string \`gorm:"uniqueIndex"\`
+	LoyaltyUserID string \`gorm:"uniqueIndex"\`
 
 	AffiliateCode string \`gorm:"uniqueIndex"\`
 

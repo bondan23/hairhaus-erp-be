@@ -17,48 +17,48 @@ type LoginResponse struct {
 
 // ===== Branch =====
 type CreateBranchRequest struct {
-	Name     string `json:"name" binding:"required"`
-	Code     string `json:"code" binding:"required"`
-	Address  string `json:"address"`
-	OutletID string `json:"outlet_id"`
-	Phone    string `json:"phone"`
+	Name            string `json:"name" binding:"required"`
+	Code            string `json:"code" binding:"required"`
+	Address         string `json:"address"`
+	LoyaltyOutletID string `json:"loyalty_outlet_id"`
+	Phone           string `json:"phone"`
 }
 
 type UpdateBranchRequest struct {
-	Name     *string `json:"name"`
-	Address  *string `json:"address"`
-	Phone    *string `json:"phone"`
-	OutletID *string `json:"outlet_id"`
-	IsActive *bool   `json:"is_active"`
+	Name            *string `json:"name"`
+	Address         *string `json:"address"`
+	Phone           *string `json:"phone"`
+	LoyaltyOutletID *string `json:"loyalty_outlet_id"`
+	IsActive        *bool   `json:"is_active"`
 }
 
 // ===== User =====
 type CreateUserRequest struct {
-	EmployeeID  string    `json:"employee_id" binding:"required"`
-	Name        string    `json:"name" binding:"required"`
-	PhoneNumber string    `json:"phone_number" binding:"required"`
-	Pin         string    `json:"pin" binding:"required,min=4"`
-	Role        string    `json:"role" binding:"required,oneof=ADMIN MANAGER CASHIER"`
-	BranchID    uuid.UUID `json:"branch_id" binding:"required"`
+	LoyaltyEmployeeID string    `json:"loyalty_employee_id" binding:"required"`
+	Name              string    `json:"name" binding:"required"`
+	PhoneNumber       string    `json:"phone_number" binding:"required"`
+	Pin               string    `json:"pin" binding:"required,min=4"`
+	Role              string    `json:"role" binding:"required,oneof=ADMIN MANAGER CASHIER"`
+	BranchID          uuid.UUID `json:"branch_id" binding:"required"`
 }
 
 type UpdateUserRequest struct {
-	EmployeeID  *string    `json:"employee_id"`
-	Name        *string    `json:"name"`
-	PhoneNumber *string    `json:"phone_number"`
-	Pin         *string    `json:"pin"`
-	Role        *string    `json:"role"`
-	BranchID    *uuid.UUID `json:"branch_id"`
+	LoyaltyEmployeeID *string    `json:"loyalty_employee_id"`
+	Name              *string    `json:"name"`
+	PhoneNumber       *string    `json:"phone_number"`
+	Pin               *string    `json:"pin"`
+	Role              *string    `json:"role"`
+	BranchID          *uuid.UUID `json:"branch_id"`
 }
 
 type UserResponse struct {
-	ID          uuid.UUID `json:"id"`
-	EmployeeID  string    `json:"employee_id"`
-	OutletID    string    `json:"outlet_id"`
-	Name        string    `json:"name"`
-	PhoneNumber string    `json:"phone_number"`
-	Role        string    `json:"role"`
-	BranchID    uuid.UUID `json:"branch_id"`
+	ID                uuid.UUID `json:"id"`
+	LoyaltyEmployeeID string    `json:"loyalty_employee_id"`
+	LoyaltyOutletID   string    `json:"loyalty_outlet_id"`
+	Name              string    `json:"name"`
+	PhoneNumber       string    `json:"phone_number"`
+	Role              string    `json:"role"`
+	BranchID          uuid.UUID `json:"branch_id"`
 }
 
 // ===== Product Category =====
@@ -127,17 +127,19 @@ type UpdateBranchStylistRequest struct {
 
 // ===== Customer =====
 type CreateCustomerRequest struct {
-	Name              string  `json:"name" binding:"required"`
-	Phone             string  `json:"phone"`
-	Gender            *string `json:"gender" binding:"omitempty,oneof=MALE FEMALE Male Female"`
-	LoyaltyExternalID string  `json:"loyalty_external_id"`
+	Name            string  `json:"name" binding:"required"`
+	Phone           string  `json:"phone"`
+	Gender          *string `json:"gender" binding:"omitempty,oneof=MALE FEMALE Male Female"`
+	LoyaltyUserID   *string `json:"loyalty_user_id"`
+	LoyaltyOutletID *string `json:"loyalty_outlet_id"`
 }
 
 type UpdateCustomerRequest struct {
-	Name              *string `json:"name"`
-	Phone             *string `json:"phone"`
-	Gender            *string `json:"gender" binding:"omitempty,oneof=MALE FEMALE Male Female"`
-	LoyaltyExternalID *string `json:"loyalty_external_id"`
+	Name            *string `json:"name"`
+	Phone           *string `json:"phone"`
+	Gender          *string `json:"gender" binding:"omitempty,oneof=MALE FEMALE Male Female"`
+	LoyaltyUserID   *string `json:"loyalty_user_id"`
+	LoyaltyOutletID *string `json:"loyalty_outlet_id"`
 }
 
 type IdentifyCustomerRequest struct {
@@ -255,7 +257,7 @@ type AdjustStockRequest struct {
 
 // ===== Affiliate =====
 type CreateAffiliateRequest struct {
-	LoyaltyMemberID      string  `json:"loyalty_member_id" binding:"required"`
+	LoyaltyUserID        string  `json:"loyalty_user_id" binding:"required"`
 	AffiliateCode        string  `json:"affiliate_code" binding:"required"`
 	Name                 string  `json:"name" binding:"required"`
 	CommissionType       string  `json:"commission_type" binding:"required,oneof=PERCENTAGE FIXED"`

@@ -19,7 +19,7 @@ func NewAffiliateService(repo repositories.AffiliateRepository, commRepo reposit
 
 func (s *AffiliateService) Create(req dto.CreateAffiliateRequest) (*models.Affiliate, error) {
 	affiliate := &models.Affiliate{
-		LoyaltyMemberID:      req.LoyaltyMemberID,
+		LoyaltyUserID:        req.LoyaltyUserID,
 		AffiliateCode:        req.AffiliateCode,
 		Name:                 req.Name,
 		CommissionType:       req.CommissionType,

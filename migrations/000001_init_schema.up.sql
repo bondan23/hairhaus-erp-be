@@ -7,7 +7,7 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- 1. Branches
 CREATE TABLE branches (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    outlet_id VARCHAR(255) NOT NULL,
+    loyalty_outlet_id VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,
     code VARCHAR(50) NOT NULL UNIQUE,
     address TEXT,
@@ -22,7 +22,7 @@ CREATE INDEX idx_branches_deleted_at ON branches(deleted_at);
 -- 2. Users
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    employee_id VARCHAR(255) NOT NULL UNIQUE,
+    loyalty_employee_id VARCHAR(255) NOT NULL UNIQUE,
     name VARCHAR(255) NOT NULL,
     phone_number VARCHAR(50) NOT NULL UNIQUE,
     pin VARCHAR(255) NOT NULL,
@@ -103,7 +103,8 @@ CREATE TABLE customers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     phone VARCHAR(50),
-    loyalty_external_id VARCHAR(255),
+    loyalty_user_id VARCHAR(255),
+    loyalty_outlet_id VARCHAR(255),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     deleted_at TIMESTAMP WITH TIME ZONE
@@ -113,7 +114,7 @@ CREATE INDEX idx_customers_deleted_at ON customers(deleted_at);
 -- 9. Affiliates
 CREATE TABLE affiliates (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    loyalty_member_id VARCHAR(255) NOT NULL UNIQUE,
+    loyalty_user_id VARCHAR(255) NOT NULL UNIQUE,
     affiliate_code VARCHAR(50) NOT NULL UNIQUE,
     name VARCHAR(255) NOT NULL,
     commission_type VARCHAR(20) NOT NULL CHECK (commission_type IN ('PERCENTAGE', 'FIXED')),
