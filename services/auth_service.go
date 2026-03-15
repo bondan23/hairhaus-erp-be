@@ -31,7 +31,7 @@ func (s *AuthService) Login(req dto.LoginRequest) (*dto.LoginResponse, error) {
 		return nil, errors.New("invalid phone number or pin")
 	}
 
-	token, err := utils.GenerateToken(user.ID, user.EmployeeID, user.OutletID, user.PhoneNumber, user.Role, user.BranchID, s.jwtSecret, s.jwtExpiry)
+	token, err := utils.GenerateToken(user.ID, user.EmployeeID, user.Branch.OutletID, user.PhoneNumber, user.Role, user.BranchID, s.jwtSecret, s.jwtExpiry)
 	if err != nil {
 		return nil, errors.New("failed to generate token")
 	}
@@ -41,7 +41,7 @@ func (s *AuthService) Login(req dto.LoginRequest) (*dto.LoginResponse, error) {
 		User: dto.UserResponse{
 			ID:          user.ID,
 			EmployeeID:  user.EmployeeID,
-			OutletID:    user.OutletID,
+			OutletID:    user.Branch.OutletID,
 			Name:        user.Name,
 			PhoneNumber: user.PhoneNumber,
 			Role:        user.Role,
@@ -49,4 +49,3 @@ func (s *AuthService) Login(req dto.LoginRequest) (*dto.LoginResponse, error) {
 		},
 	}, nil
 }
-

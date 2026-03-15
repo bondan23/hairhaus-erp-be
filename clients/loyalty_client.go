@@ -58,7 +58,7 @@ func (c *LoyaltyClient) CheckMember(cCtx *gin.Context, phone string) (*dto.Loyal
 	reqBody := map[string]string{"phoneNumber": phone}
 	jsonBody, _ := json.Marshal(reqBody)
 
-	req, err := c.NewRequest(cCtx, "POST", "/open/auth/check")
+	req, err := c.NewRequest(cCtx, "POST", "/auth/check")
 	if err != nil {
 		return nil, err
 	}
@@ -87,11 +87,12 @@ func (c *LoyaltyClient) RegisterMember(cCtx *gin.Context, phone, name, gender st
 	reqBody := map[string]string{
 		"phoneNumber": phone,
 		"name":        name,
+		"passCode":    "123456",
 		"gender":      gender,
 	}
 	jsonBody, _ := json.Marshal(reqBody)
 
-	req, err := c.NewRequest(cCtx, "POST", "/open/operator/register")
+	req, err := c.NewRequest(cCtx, "POST", "/auth/register")
 	if err != nil {
 		return "", err
 	}
@@ -127,7 +128,7 @@ func (c *LoyaltyClient) RequestLoyaltyOTP(cCtx *gin.Context, phone string, userI
 	}
 	jsonBody, _ := json.Marshal(reqBody)
 
-	req, err := c.NewRequest(cCtx, "POST", "/open/auth/send-otp")
+	req, err := c.NewRequest(cCtx, "POST", "/auth/send-otp")
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +159,7 @@ func (c *LoyaltyClient) VerifyLoyaltyOTP(cCtx *gin.Context, phone, otp, userID s
 	}
 	jsonBody, _ := json.Marshal(reqBody)
 
-	req, err := c.NewRequest(cCtx, "POST", "/open/auth/validate-otp")
+	req, err := c.NewRequest(cCtx, "POST", "/auth/validate-otp")
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +184,7 @@ func (c *LoyaltyClient) GetCustomerInfo(cCtx *gin.Context, phone string) (*dto.L
 	reqBody := map[string]string{"phoneNumber": phone}
 	jsonBody, _ := json.Marshal(reqBody)
 
-	req, err := c.NewRequest(cCtx, "POST", "/open/qr/check-info")
+	req, err := c.NewRequest(cCtx, "POST", "/qr/check-info")
 	if err != nil {
 		return nil, err
 	}

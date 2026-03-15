@@ -36,8 +36,8 @@ func main() {
 
 	// --- 1. INDEPENDENT TABLES ---
 	fmt.Println("Seeding Branches...")
-	branchPusat := models.Branch{Code: "BKS", Name: "HAIRHAUS Bekasi", Address: "Jl. Sudirman No 1", Phone: "08123456789", IsActive: true}
-	branchCabang := models.Branch{Code: "KNG", Name: "HAIRHAUS Kuningan", Address: "Jl. Thamrin No 2", Phone: "08198765432", IsActive: false}
+	branchPusat := models.Branch{Code: "BKS", Name: "HAIRHAUS Bekasi", Address: "Jl. Sudirman No 1", Phone: "08123456789", OutletID: "cm1tntou2000611xf7cpkhb7r", IsActive: true}
+	branchCabang := models.Branch{Code: "KNG", Name: "HAIRHAUS Kuningan", Address: "Jl. Thamrin No 2", Phone: "08198765432", OutletID: "cm1tntuli000711xfo7cbgz3k", IsActive: true}
 	db.FirstOrCreate(&branchPusat, models.Branch{Code: "BKS"})
 	db.FirstOrCreate(&branchCabang, models.Branch{Code: "KNG"})
 
@@ -81,9 +81,9 @@ func main() {
 	// --- 2. FIRST-LEVEL DEPENDENT ---
 	fmt.Println("Seeding Users...")
 	users := []models.User{
-		{Name: "Admin", PhoneNumber: "082210001000", EmployeeID: "EMP001", OutletID: "OUT001", Pin: hashPassword("0808"), Role: models.RoleAdmin, BranchID: branchPusat.ID},
-		{Name: "Manager Pusat", PhoneNumber: "082299990359", EmployeeID: "EMP002", OutletID: "OUT001", Pin: hashPassword("0808"), Role: models.RoleManager, BranchID: branchPusat.ID},
-		{Name: "Cashier Pusat", PhoneNumber: "082210007020", EmployeeID: "EMP003", OutletID: "OUT001", Pin: hashPassword("0808"), Role: models.RoleCashier, BranchID: branchPusat.ID},
+		{Name: "Admin", PhoneNumber: "082210001000", EmployeeID: "EMP001", Pin: hashPassword("0808"), Role: models.RoleAdmin, BranchID: branchPusat.ID},
+		{Name: "Manager Pusat", PhoneNumber: "082299990359", EmployeeID: "EMP002", Pin: hashPassword("0808"), Role: models.RoleManager, BranchID: branchPusat.ID},
+		{Name: "Cashier Pusat", PhoneNumber: "082210007020", EmployeeID: "EMP003", Pin: hashPassword("0808"), Role: models.RoleCashier, BranchID: branchPusat.ID},
 	}
 	for _, u := range users {
 		db.FirstOrCreate(&u, models.User{PhoneNumber: u.PhoneNumber})

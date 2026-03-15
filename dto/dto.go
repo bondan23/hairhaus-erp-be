@@ -17,23 +17,24 @@ type LoginResponse struct {
 
 // ===== Branch =====
 type CreateBranchRequest struct {
-	Name    string `json:"name" binding:"required"`
-	Code    string `json:"code" binding:"required"`
-	Address string `json:"address"`
-	Phone   string `json:"phone"`
+	Name     string `json:"name" binding:"required"`
+	Code     string `json:"code" binding:"required"`
+	Address  string `json:"address"`
+	OutletID string `json:"outlet_id"`
+	Phone    string `json:"phone"`
 }
 
 type UpdateBranchRequest struct {
 	Name     *string `json:"name"`
 	Address  *string `json:"address"`
 	Phone    *string `json:"phone"`
+	OutletID *string `json:"outlet_id"`
 	IsActive *bool   `json:"is_active"`
 }
 
 // ===== User =====
 type CreateUserRequest struct {
 	EmployeeID  string    `json:"employee_id" binding:"required"`
-	OutletID    string    `json:"outlet_id" binding:"required"`
 	Name        string    `json:"name" binding:"required"`
 	PhoneNumber string    `json:"phone_number" binding:"required"`
 	Pin         string    `json:"pin" binding:"required,min=4"`
@@ -43,7 +44,6 @@ type CreateUserRequest struct {
 
 type UpdateUserRequest struct {
 	EmployeeID  *string    `json:"employee_id"`
-	OutletID    *string    `json:"outlet_id"`
 	Name        *string    `json:"name"`
 	PhoneNumber *string    `json:"phone_number"`
 	Pin         *string    `json:"pin"`
