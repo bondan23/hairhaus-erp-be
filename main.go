@@ -101,7 +101,7 @@ func main() {
 		Stylist:         handlers.NewStylistHandler(stylistService),
 		BranchProduct:   handlers.NewBranchProductHandler(branchProductService),
 		BranchStylist:   handlers.NewBranchStylistHandler(branchStylistService),
-		Customer:        handlers.NewCustomerHandler(customerService),
+		Customer:        handlers.NewCustomerHandler(customerService, loyaltyClient),
 		CashDrawer:      handlers.NewCashDrawerHandler(cashDrawerService),
 		Transaction:     handlers.NewTransactionHandler(transactionService),
 		Inventory:       handlers.NewInventoryHandler(inventoryService),

@@ -140,6 +140,48 @@ type UpdateCustomerRequest struct {
 	LoyaltyExternalID *string `json:"loyalty_external_id"`
 }
 
+type IdentifyCustomerRequest struct {
+	Phone string `json:"phone" binding:"required"`
+}
+
+type LoyaltyCheckResponse struct {
+	UserStatus  string  `json:"userStatus"`
+	UserID      *string `json:"userID"`
+	PhoneNumber string  `json:"phoneNumber"`
+}
+
+type LoyaltyOTPResponse struct {
+	Success bool   `json:"success"`
+	OTP     string `json:"otp"`
+	Message string `json:"message"`
+}
+
+type LoyaltyVerifyResponse struct {
+	Success  bool   `json:"success"`
+	Verified bool   `json:"verified"`
+	Message  string `json:"message"`
+	UserID   string `json:"userID"`
+}
+
+type LoyaltyCustomerInfo struct {
+	Name               *string `json:"name"`
+	Point              float64 `json:"point"`
+	UserId             *string `json:"userId"`
+	RegisteredLocation *string `json:"registeredLocationId"`
+}
+
+type VerifyLoyaltyOTPRequest struct {
+	Phone  string `json:"phone" binding:"required"`
+	OTP    string `json:"otp" binding:"required"`
+	UserID string `json:"user_id"` // Optional during registration
+}
+
+type RegisterLoyaltyRequest struct {
+	Phone  string `json:"phone" binding:"required"`
+	Name   string `json:"name" binding:"required"`
+	Gender string `json:"gender" binding:"required"`
+}
+
 // ===== Cash Drawer =====
 type OpenDrawerRequest struct {
 	BranchID      uuid.UUID `json:"branch_id" binding:"required"`

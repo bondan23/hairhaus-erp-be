@@ -709,6 +709,89 @@ paths:
         '200':
           description: Customer deleted
 
+  /customers/identify:
+    post:
+      tags: [Customers]
+      summary: Identify customer by phone number
+      description: Search ERP database then Loyalty Service for customer identification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IdentifyCustomerRequest'
+      responses:
+        '200':
+          description: Customer identified
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  customer:
+                    $ref: '#/components/schemas/Customer'
+                  loyalty_info:
+                    $ref: '#/components/schemas/LoyaltyCheckResponse'
+
+  /customers/loyalty/register:
+    post:
+      tags: [Customers]
+      summary: Register new customer to loyalty system
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterLoyaltyRequest'
+      responses:
+        '200':
+          description: Loyalty registration initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /customers/loyalty/otp:
+    post:
+      tags: [Customers]
+      summary: Request OTP for loyalty
+      parameters:
+        - name: phone
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OTP sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /customers/loyalty/verify:
+    post:
+      tags: [Customers]
+      summary: Verify OTP and create customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyLoyaltyOTPRequest'
+      responses:
+        '201':
+          description: Customer verified and created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+
   # ==================== CASH DRAWERS ====================
   /drawers/open:
     post:
@@ -1772,6 +1855,119 @@ components:
           nullable: true
 
     # ---- Customer ----
+    Customer:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        phone:
+          type: string
+        gender:
+          type: string
+          enum: [Male, Female]
+          nullable: true
+        loyalty_external_id:
+          type: string
+          nullable: true
+        is_loyalty_verified:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    IdentifyCustomerRequest:
+      type: object
+      required: [phone]
+      properties:
+        phone:
+          type: string
+          example: "081234567890"
+
+    LoyaltyCheckResponse:
+      type: object
+      properties:
+        userStatus:
+          type: string
+          example: "Verified"
+        userID:
+          type: string
+          nullable: true
+          example: "U12345"
+        phoneNumber:
+          type: string
+          example: "081234567890"
+
+    LoyaltyOTPResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        otp:
+          type: string
+        message:
+          type: string
+
+    LoyaltyVerifyResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        verified:
+          type: boolean
+        message:
+          type: string
+        userID:
+          type: string
+          example: "U12345"
+
+    LoyaltyCustomerInfo:
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: true
+        point:
+          type: number
+        userId:
+          type: string
+          nullable: true
+        registeredLocationId:
+          type: string
+          nullable: true
+
+    VerifyLoyaltyOTPRequest:
+      type: object
+      required: [phone, otp]
+      properties:
+        phone:
+          type: string
+        otp:
+          type: string
+        user_id:
+          type: string
+          nullable: true
+
+    RegisterLoyaltyRequest:
+      type: object
+      required: [phone, name, gender]
+      properties:
+        phone:
+          type: string
+          example: "081234567890"
+        name:
+          type: string
+          example: "John Doe"
+        gender:
+          type: string
+          enum: [Male, Female]
+          example: "Male"
+
     CreateCustomerRequest:
       type: object
       required: [name]

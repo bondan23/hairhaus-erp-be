@@ -152,6 +152,12 @@ func SetupRouter(h *Handlers, jwtSecret string) *gin.Engine {
 			customers.POST("", h.Customer.Create)
 			customers.PUT("/:id", h.Customer.Update)
 			customers.DELETE("/:id", middleware.RequireRole(models.RoleAdmin, models.RoleManager), h.Customer.Delete)
+
+			// Identification & Loyalty
+			customers.POST("/identify", h.Customer.Identify)
+			customers.POST("/loyalty/register", h.Customer.RegisterLoyalty)
+			customers.POST("/loyalty/otp", h.Customer.RequestLoyaltyOTP)
+			customers.POST("/loyalty/verify", h.Customer.VerifyLoyaltyOTP)
 		}
 
 		// --- Cash Drawers ---

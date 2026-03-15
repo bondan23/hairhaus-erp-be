@@ -7,4 +7,5 @@ type Customer struct {
 	Phone             string  `json:"phone"`
 	Gender            *string `json:"gender"`
 	LoyaltyExternalID string  `json:"loyalty_external_id"`
+	IsLoyaltyVerified bool    `gorm:"default:false" json:"is_loyalty_verified"`
 }

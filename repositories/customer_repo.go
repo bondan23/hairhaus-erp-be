@@ -11,6 +11,7 @@ type CustomerRepository interface {
 	Create(customer *models.Customer) error
 	FindAll(offset, limit int) ([]models.Customer, int64, error)
 	FindByID(id uuid.UUID) (*models.Customer, error)
+	FindByPhone(phone string) (*models.Customer, error)
 	Update(customer *models.Customer) error
 	Delete(id uuid.UUID) error
 }
@@ -38,6 +39,15 @@ func (r *customerRepository) FindAll(offset, limit int) ([]models.Customer, int6
 func (r *customerRepository) FindByID(id uuid.UUID) (*models.Customer, error) {
 	var customer models.Customer
 	err := r.db.First(&customer, "id = ?", id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &customer, nil
+}
+
+func (r *customerRepository) FindByPhone(phone string) (*models.Customer, error) {
+	var customer models.Customer
+	err := r.db.First(&customer, "phone = ?", phone).Error
 	if err != nil {
 		return nil, err
 	}
