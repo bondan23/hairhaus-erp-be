@@ -39,7 +39,9 @@ func (h *CustomerHandler) Create(c *gin.Context) {
 
 func (h *CustomerHandler) GetAll(c *gin.Context) {
 	page, pageSize := utils.GetPaginationParams(c)
-	customers, total, err := h.service.GetAll(utils.GetOffset(page, pageSize), pageSize)
+	name := c.Query("name")
+	phone := c.Query("phone")
+	customers, total, err := h.service.GetAll(utils.GetOffset(page, pageSize), pageSize, name, phone)
 	if err != nil {
 		utils.RespondError(c, http.StatusInternalServerError, err.Error())
 		return

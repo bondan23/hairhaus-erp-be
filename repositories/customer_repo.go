@@ -9,7 +9,7 @@ import (
 
 type CustomerRepository interface {
 	Create(customer *models.Customer) error
-	FindAll(offset, limit int) ([]models.Customer, int64, error)
+	FindAll(offset, limit int, name, phone string) ([]models.Customer, int64, error)
 	FindByID(id uuid.UUID) (*models.Customer, error)
 	FindByPhone(phone string) (*models.Customer, error)
 	Update(customer *models.Customer) error
@@ -28,11 +28,18 @@ func (r *customerRepository) Create(customer *models.Customer) error {
 	return r.db.Create(customer).Error
 }
 
-func (r *customerRepository) FindAll(offset, limit int) ([]models.Customer, int64, error) {
+func (r *customerRepository) FindAll(offset, limit int, name, phone string) ([]models.Customer, int64, error) {
 	var customers []models.Customer
 	var total int64
-	r.db.Model(&models.Customer{}).Count(&total)
-	err := r.db.Offset(offset).Limit(limit).Find(&customers).Error
+	query := r.db.Model(&models.Customer{})
+	if name != "" {
+		query = query.Where("name ILIKE ?", "%"+name+"%")
+	}
+	if phone != "" {
+		query = query.Where("phone LIKE ?", "%"+phone+"%")
+	}
+	query.Count(&total)
+	err := query.Offset(offset).Limit(limit).Find(&customers).Error
 	return customers, total, err
 }
 

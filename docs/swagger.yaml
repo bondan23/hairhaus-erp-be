@@ -660,6 +660,18 @@ paths:
       parameters:
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PageSize'
+        - name: name
+          in: query
+          description: Filter by customer name (partial, case-insensitive)
+          required: false
+          schema:
+            type: string
+        - name: phone
+          in: query
+          description: Filter by phone number (partial)
+          required: false
+          schema:
+            type: string
       responses:
         '200':
           description: Paginated customers

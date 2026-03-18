@@ -34,8 +34,8 @@ func (s *CustomerService) Create(req dto.CreateCustomerRequest) (*models.Custome
 	return customer, nil
 }
 
-func (s *CustomerService) GetAll(offset, limit int) ([]models.Customer, int64, error) {
-	return s.repo.FindAll(offset, limit)
+func (s *CustomerService) GetAll(offset, limit int, name, phone string) ([]models.Customer, int64, error) {
+	return s.repo.FindAll(offset, limit, name, phone)
 }
 
 func (s *CustomerService) GetByID(id uuid.UUID) (*models.Customer, error) {
