@@ -172,6 +172,7 @@ func SetupRouter(h *Handlers, jwtSecret string) *gin.Engine {
 		transactions := protected.Group("/transactions")
 		{
 			transactions.POST("/save", middleware.RequireRole(models.RoleAdmin, models.RoleManager, models.RoleCashier), h.Transaction.Save)
+			transactions.PUT("/draft/:id", middleware.RequireRole(models.RoleAdmin, models.RoleManager, models.RoleCashier), h.Transaction.EditDraft)
 			transactions.POST("/checkout", middleware.RequireRole(models.RoleAdmin, models.RoleManager, models.RoleCashier), h.Transaction.Checkout)
 			transactions.POST("/:id/checkout", middleware.RequireRole(models.RoleAdmin, models.RoleManager, models.RoleCashier), h.Transaction.CheckoutDraft)
 			transactions.GET("/:id", h.Transaction.GetByID)

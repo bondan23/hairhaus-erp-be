@@ -888,6 +888,37 @@ paths:
         '400':
           description: Validation error
 
+  /transactions/draft/{id}:
+    put:
+      tags: [Transactions]
+      summary: Update a draft transaction
+      description: |
+        Updates an existing transaction that is in DRAFT status.
+        **Roles:** ADMIN, MANAGER, CASHIER
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveTransactionRequest'
+      responses:
+        '200':
+          description: Draft transaction updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - properties:
+                      data:
+                        $ref: '#/components/schemas/Transaction'
+        '400':
+          description: Validation error or transaction not in draft status
+        '404':
+          $ref: '#/components/responses/NotFound'
+
   /transactions/checkout:
     post:
       tags: [Transactions]
@@ -2210,7 +2241,7 @@ components:
 
     SaveTransactionRequest:
       type: object
-      required: [branch_id, customer_id, items]
+      required: [branch_id, items]
       properties:
         branch_id:
           type: string
@@ -2218,6 +2249,7 @@ components:
         customer_id:
           type: string
           format: uuid
+          nullable: true
         customer_name:
           type: string
           nullable: true

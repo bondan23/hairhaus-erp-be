@@ -52,7 +52,7 @@ func NewTransactionService(
 		bsRepo: bsRepo, productRepo: productRepo, stylistRepo: stylistRepo,
 		drawerRepo: drawerRepo, affiliateRepo: affiliateRepo,
 		affCommRepo: affCommRepo, smRepo: smRepo, auditRepo: auditRepo,
-		customerRepo: customerRepo,
+		customerRepo:  customerRepo,
 		loyaltyClient: loyaltyClient,
 	}
 }
@@ -79,15 +79,15 @@ func (s *TransactionService) SaveTransaction(req dto.SaveTransactionRequest, use
 		affiliate = aff
 	}
 
-	customer, err := s.customerRepo.FindByID(req.CustomerID)
-	if err != nil {
-		return nil, errors.New("customer not found")
-	}
+	// customer, err := s.customerRepo.FindByID(req.CustomerID)
+	// if err != nil {
+	// 	return nil, errors.New("customer not found")
+	// }
 
 	customerName := req.CustomerName
-	if customerName == nil {
-		customerName = &customer.Name
-	}
+	// if customerName == nil {
+	// 	customerName = &customer.Name
+	// }
 
 	// XOR Discount Check
 	var hasItemDiscounts bool
@@ -219,7 +219,7 @@ func (s *TransactionService) SaveTransaction(req dto.SaveTransactionRequest, use
 		txn = &models.Transaction{
 			InvoiceNo:                         invoiceNo,
 			BranchID:                          req.BranchID,
-			CustomerID:                        &req.CustomerID,
+			CustomerID:                        req.CustomerID,
 			CustomerName:                      customerName,
 			AffiliateID:                       affiliateID,
 			SubtotalAmount:                    subtotal,
@@ -232,6 +232,186 @@ func (s *TransactionService) SaveTransaction(req dto.SaveTransactionRequest, use
 
 		if err := s.txnRepo.CreateWithTx(dbTx, txn); err != nil {
 			return fmt.Errorf("failed to create draft transaction: %w", err)
+		}
+
+		for i := range items {
+			items[i].TransactionID = txn.ID
+			if err := s.txnRepo.CreateItemWithTx(dbTx, &items[i]); err != nil {
+				return fmt.Errorf("failed to create transaction item: %w", err)
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return s.txnRepo.FindByID(txn.ID)
+}
+
+// EditDraftTransaction updates an existing draft transaction.
+func (s *TransactionService) EditDraftTransaction(txnID uuid.UUID, req dto.SaveTransactionRequest, userID uuid.UUID) (*models.Transaction, error) {
+	txn, err := s.txnRepo.FindByID(txnID)
+	if err != nil {
+		return nil, errors.New("transaction not found")
+	}
+	if txn.Status != models.TransactionStatusDraft {
+		return nil, errors.New("only draft transactions can be edited via this endpoint")
+	}
+
+	if _, err := s.branchRepo.FindByID(req.BranchID); err != nil {
+		return nil, errors.New("branch not found")
+	}
+
+	var affiliate *models.Affiliate
+	if req.AffiliateCode != "" {
+		aff, err := s.affiliateRepo.FindByCode(req.AffiliateCode)
+		if err != nil {
+			return nil, errors.New("invalid affiliate code")
+		}
+		affiliate = aff
+	}
+
+	customerName := req.CustomerName
+
+	// XOR Discount Check
+	var hasItemDiscounts bool
+	var sumItemDiscounts int64
+
+	for _, item := range req.Items {
+		if item.DiscountAmount > 0 {
+			hasItemDiscounts = true
+			sumItemDiscounts += item.DiscountAmount
+		}
+	}
+
+	if hasItemDiscounts && req.DiscountAmount > 0 {
+		return nil, errors.New("cannot apply both item-level discounts and a transaction-level discount")
+	}
+
+	if hasItemDiscounts {
+		req.DiscountAmount = sumItemDiscounts
+	}
+
+	db := s.txnRepo.DB()
+	err = db.Transaction(func(dbTx *gorm.DB) error {
+		var subtotal int64
+		var items []models.TransactionItem
+
+		for _, itemReq := range req.Items {
+			product, err := s.productRepo.FindByID(itemReq.ProductID)
+			if err != nil {
+				return fmt.Errorf("product not found: %s", itemReq.ProductID)
+			}
+
+			price := product.BasePrice
+			bp, bpErr := s.bpRepo.FindByBranchAndProduct(req.BranchID, product.ID)
+			if bpErr == nil && bp.PriceOverride != nil {
+				price = *bp.PriceOverride
+			}
+
+			incomeType := models.IncomeTypeProduct
+			if product.ProductType == models.ProductTypeService {
+				if strings.ToUpper(product.Category.Code) == models.CategoryCodeHaircut {
+					incomeType = models.IncomeTypeHaircut
+				} else {
+					incomeType = models.IncomeTypeTreatment
+				}
+
+				if incomeType == models.IncomeTypeHaircut && itemReq.StylistID != nil {
+					bs, bsErr := s.bsRepo.FindByBranchAndStylist(req.BranchID, *itemReq.StylistID)
+					if bsErr == nil && bs.HaircutPriceOverride != nil {
+						price = *bs.HaircutPriceOverride
+					}
+				}
+			}
+
+			grossSubtotal := price * itemReq.Quantity
+			itemDiscount := itemReq.DiscountAmount
+			netSubtotal := grossSubtotal - itemDiscount
+			if netSubtotal < 0 {
+				return errors.New("item discount cannot exceed the gross subtotal")
+			}
+
+			var stylistName string
+			if itemReq.StylistID != nil {
+				stylist, err := s.stylistRepo.FindByID(*itemReq.StylistID)
+				if err == nil {
+					stylistName = stylist.Name
+				}
+			}
+
+			var commissionAmount int64
+			if product.ProductType == models.ProductTypeService && itemReq.StylistID != nil {
+				commissionableAmount := grossSubtotal
+				if incomeType == models.IncomeTypeTreatment && product.CostPrice > 0 {
+					itemMargin := price - product.CostPrice
+					if itemMargin < 0 {
+						itemMargin = 0
+					}
+					commissionableAmount = itemMargin * itemReq.Quantity
+				}
+
+				commissionRate := 40
+				bs, bsErr := s.bsRepo.FindByBranchAndStylist(req.BranchID, *itemReq.StylistID)
+				if bsErr == nil && bs.CommissionPercentage != nil {
+					commissionRate = *bs.CommissionPercentage
+				}
+				commissionAmount = commissionableAmount * int64(commissionRate) / 100
+			}
+
+			item := models.TransactionItem{
+				ProductID:                itemReq.ProductID,
+				StylistID:                itemReq.StylistID,
+				ProductNameSnapshot:      product.Name,
+				ProductTypeSnapshot:      product.ProductType,
+				CategoryNameSnapshot:     product.Category.Name,
+				IncomeTypeSnapshot:       incomeType,
+				StylistNameSnapshot:      stylistName,
+				PriceSnapshot:            price,
+				Quantity:                 itemReq.Quantity,
+				GrossSubtotal:            grossSubtotal,
+				ItemDiscount:             itemDiscount,
+				NetSubtotal:              netSubtotal,
+				CommissionAmountSnapshot: commissionAmount,
+				CostPriceSnapshot:        product.CostPrice,
+			}
+			items = append(items, item)
+			subtotal += grossSubtotal
+		}
+
+		totalAmount := subtotal - req.DiscountAmount
+
+		var affiliateID *uuid.UUID
+		var affiliateCommissionAmount int64
+		if affiliate != nil {
+			affiliateID = &affiliate.ID
+			if affiliate.CommissionType == models.CommissionTypePercentage {
+				affiliateCommissionAmount = int64(float64(subtotal) * affiliate.CommissionPercentage / 100)
+			} else {
+				affiliateCommissionAmount = affiliate.CommissionFixed
+			}
+		}
+
+		// Update fields
+		txn.BranchID = req.BranchID
+		txn.CustomerID = req.CustomerID
+		txn.CustomerName = customerName
+		txn.AffiliateID = affiliateID
+		txn.SubtotalAmount = subtotal
+		txn.DiscountAmount = req.DiscountAmount
+		txn.TotalAmount = totalAmount
+		txn.AffiliateCommissionAmountSnapshot = affiliateCommissionAmount
+
+		if err := s.txnRepo.UpdateWithTx(dbTx, txn); err != nil {
+			return fmt.Errorf("failed to update draft transaction: %w", err)
+		}
+
+		// Delete old items and create new ones
+		if err := s.txnRepo.DeleteItemsWithTx(dbTx, txn.ID); err != nil {
+			return fmt.Errorf("failed to clear transaction items: %w", err)
 		}
 
 		for i := range items {

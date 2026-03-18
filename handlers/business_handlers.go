@@ -122,6 +122,28 @@ func (h *TransactionHandler) Save(c *gin.Context) {
 	utils.RespondCreated(c, "Transaction saved as draft", txn)
 }
 
+func (h *TransactionHandler) EditDraft(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		utils.RespondValidationError(c, "Invalid draft ID")
+		return
+	}
+
+	var req dto.SaveTransactionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.RespondValidationError(c, err.Error())
+		return
+	}
+
+	userID := c.MustGet("user_id").(uuid.UUID)
+	txn, err := h.service.EditDraftTransaction(id, req, userID)
+	if err != nil {
+		utils.RespondError(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	utils.RespondSuccess(c, "Draft transaction updated", txn)
+}
+
 func (h *TransactionHandler) CheckoutDraft(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {

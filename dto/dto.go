@@ -209,7 +209,7 @@ type CheckoutRequest struct {
 
 type SaveTransactionRequest struct {
 	BranchID       uuid.UUID             `json:"branch_id" binding:"required"`
-	CustomerID     uuid.UUID             `json:"customer_id" binding:"required"`
+	CustomerID     *uuid.UUID            `json:"customer_id"`
 	CustomerName   *string               `json:"customer_name"`
 	AffiliateCode  string                `json:"affiliate_code"`
 	Items          []CheckoutItemRequest `json:"items" binding:"required,min=1,dive"`
