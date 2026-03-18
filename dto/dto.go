@@ -199,6 +199,7 @@ type CheckoutRequest struct {
 	TransactionID  *uuid.UUID            `json:"transaction_id"`
 	BranchID       uuid.UUID             `json:"branch_id" binding:"required"`
 	CustomerID     uuid.UUID             `json:"customer_id" binding:"required"`
+	CustomerName   *string               `json:"customer_name"`
 	AffiliateCode  string                `json:"affiliate_code"`
 	Items          []CheckoutItemRequest `json:"items" binding:"required,min=1,dive"`
 	Payments       []PaymentRequest      `json:"payments" binding:"required,min=1,dive"`
@@ -209,6 +210,7 @@ type CheckoutRequest struct {
 type SaveTransactionRequest struct {
 	BranchID       uuid.UUID             `json:"branch_id" binding:"required"`
 	CustomerID     uuid.UUID             `json:"customer_id" binding:"required"`
+	CustomerName   *string               `json:"customer_name"`
 	AffiliateCode  string                `json:"affiliate_code"`
 	Items          []CheckoutItemRequest `json:"items" binding:"required,min=1,dive"`
 	DiscountAmount int64                 `json:"discount_amount" binding:"min=0"`

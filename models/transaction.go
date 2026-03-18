@@ -19,6 +19,8 @@ type Transaction struct {
 	CustomerID *uuid.UUID `gorm:"type:uuid" json:"customer_id"`
 	Customer   *Customer  `gorm:"foreignKey:CustomerID" json:"customer,omitempty"`
 
+	CustomerName *string `json:"customer_name"`
+
 	AffiliateID *uuid.UUID `gorm:"type:uuid" json:"affiliate_id"`
 	Affiliate   *Affiliate `gorm:"foreignKey:AffiliateID" json:"affiliate,omitempty"`
 

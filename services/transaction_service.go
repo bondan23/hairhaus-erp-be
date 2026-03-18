@@ -28,6 +28,7 @@ type TransactionService struct {
 	affCommRepo   repositories.AffiliateCommissionRepository
 	smRepo        repositories.StockMovementRepository
 	auditRepo     repositories.AuditLogRepository
+	customerRepo  repositories.CustomerRepository
 	loyaltyClient *clients.LoyaltyClient
 }
 
@@ -43,6 +44,7 @@ func NewTransactionService(
 	affCommRepo repositories.AffiliateCommissionRepository,
 	smRepo repositories.StockMovementRepository,
 	auditRepo repositories.AuditLogRepository,
+	customerRepo repositories.CustomerRepository,
 	loyaltyClient *clients.LoyaltyClient,
 ) *TransactionService {
 	return &TransactionService{
@@ -50,6 +52,7 @@ func NewTransactionService(
 		bsRepo: bsRepo, productRepo: productRepo, stylistRepo: stylistRepo,
 		drawerRepo: drawerRepo, affiliateRepo: affiliateRepo,
 		affCommRepo: affCommRepo, smRepo: smRepo, auditRepo: auditRepo,
+		customerRepo: customerRepo,
 		loyaltyClient: loyaltyClient,
 	}
 }
@@ -74,6 +77,16 @@ func (s *TransactionService) SaveTransaction(req dto.SaveTransactionRequest, use
 			return nil, errors.New("invalid affiliate code")
 		}
 		affiliate = aff
+	}
+
+	customer, err := s.customerRepo.FindByID(req.CustomerID)
+	if err != nil {
+		return nil, errors.New("customer not found")
+	}
+
+	customerName := req.CustomerName
+	if customerName == nil {
+		customerName = &customer.Name
 	}
 
 	// XOR Discount Check
@@ -207,6 +220,7 @@ func (s *TransactionService) SaveTransaction(req dto.SaveTransactionRequest, use
 			InvoiceNo:                         invoiceNo,
 			BranchID:                          req.BranchID,
 			CustomerID:                        &req.CustomerID,
+			CustomerName:                      customerName,
 			AffiliateID:                       affiliateID,
 			SubtotalAmount:                    subtotal,
 			DiscountAmount:                    req.DiscountAmount,
@@ -276,6 +290,16 @@ func (s *TransactionService) Checkout(req dto.CheckoutRequest, userID uuid.UUID)
 			return nil, errors.New("invalid affiliate code")
 		}
 		affiliate = aff
+	}
+
+	customer, err := s.customerRepo.FindByID(req.CustomerID)
+	if err != nil {
+		return nil, errors.New("customer not found")
+	}
+
+	customerName := req.CustomerName
+	if customerName == nil {
+		customerName = &customer.Name
 	}
 
 	var invoiceNo string
@@ -455,6 +479,7 @@ func (s *TransactionService) Checkout(req dto.CheckoutRequest, userID uuid.UUID)
 		if draftTxn != nil {
 			txn = draftTxn
 			txn.CustomerID = &req.CustomerID
+			txn.CustomerName = customerName
 			txn.AffiliateID = affiliateID
 			txn.SubtotalAmount = subtotal
 			txn.DiscountAmount = req.DiscountAmount
@@ -480,6 +505,7 @@ func (s *TransactionService) Checkout(req dto.CheckoutRequest, userID uuid.UUID)
 				InvoiceNo:                         invoiceNo,
 				BranchID:                          req.BranchID,
 				CustomerID:                        &req.CustomerID,
+				CustomerName:                      customerName,
 				AffiliateID:                       affiliateID,
 				SubtotalAmount:                    subtotal,
 				DiscountAmount:                    req.DiscountAmount,

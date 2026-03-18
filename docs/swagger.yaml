@@ -2183,6 +2183,10 @@ components:
         customer_id:
           type: string
           format: uuid
+        customer_name:
+          type: string
+          nullable: true
+          description: "Manual customer name override (optional)"
         affiliate_code:
           type: string
           example: "REF-AHMAD"
@@ -2214,6 +2218,10 @@ components:
         customer_id:
           type: string
           format: uuid
+        customer_name:
+          type: string
+          nullable: true
+          description: "Manual customer name override (optional)"
         affiliate_code:
           type: string
           example: "REF-AHMAD"

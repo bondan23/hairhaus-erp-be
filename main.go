@@ -82,7 +82,7 @@ func main() {
 	transactionService := services.NewTransactionService(
 		transactionRepo, branchRepo, branchProductRepo, branchStylistRepo,
 		productRepo, stylistRepo, cashDrawerRepo, affiliateRepo,
-		affiliateCommRepo, stockMovementRepo, auditLogRepo, loyaltyClient,
+		affiliateCommRepo, stockMovementRepo, auditLogRepo, customerRepo, loyaltyClient,
 	)
 	inventoryService := services.NewInventoryService(branchProductRepo, stockMovementRepo)
 	affiliateService := services.NewAffiliateService(affiliateRepo, affiliateCommRepo)
