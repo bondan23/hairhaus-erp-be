@@ -72,6 +72,10 @@ func (s *CustomerService) Delete(id uuid.UUID) error {
 	return s.repo.Delete(id)
 }
 
+func (s *CustomerService) HardDelete(id uuid.UUID) error {
+	return s.repo.HardDelete(id)
+}
+
 func (s *CustomerService) Identify(cCtx *gin.Context, phone string, loyaltyClient *clients.LoyaltyClient) (*models.Customer, *dto.LoyaltyCheckResponse, error) {
 	// 1. Search ERP Customer Table
 	customer, err := s.repo.FindByPhone(phone)
@@ -113,7 +117,7 @@ func (s *CustomerService) Identify(cCtx *gin.Context, phone string, loyaltyClien
 func (s *CustomerService) Register(cCtx *gin.Context, req dto.RegisterLoyaltyRequest, loyaltyClient *clients.LoyaltyClient) error {
 	// 1. Check if phone already exists in Loyalty
 	check, err := loyaltyClient.CheckMember(cCtx, req.Phone)
-	if err == nil && check.UserStatus != "NotFound" {
+	if err == nil && check.UserStatus != "Unregistered" {
 		return errors.New("phone number already registered in loyalty system")
 	}
 

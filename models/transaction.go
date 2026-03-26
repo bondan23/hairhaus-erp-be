@@ -40,6 +40,8 @@ type Transaction struct {
 	EditedByID *uuid.UUID `gorm:"type:uuid" json:"edited_by_id"`
 	EditReason string     `json:"edit_reason"`
 
+	CreatedByID uuid.UUID `gorm:"type:uuid;not null" json:"created_by_id"`
+
 	Items    []TransactionItem `gorm:"foreignKey:TransactionID" json:"items,omitempty"`
 	Payments []Payment         `gorm:"foreignKey:TransactionID" json:"payments,omitempty"`
 }

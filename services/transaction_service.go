@@ -228,6 +228,7 @@ func (s *TransactionService) SaveTransaction(req dto.SaveTransactionRequest, use
 			AffiliateCommissionAmountSnapshot: affiliateCommissionAmount,
 			Status:                            models.TransactionStatusDraft,
 			CashDrawerID:                      drawer.ID,
+			CreatedByID:                       userID,
 		}
 
 		if err := s.txnRepo.CreateWithTx(dbTx, txn); err != nil {
@@ -694,6 +695,7 @@ func (s *TransactionService) Checkout(req dto.CheckoutRequest, userID uuid.UUID)
 				Status:                            models.TransactionStatusCompleted,
 				CashDrawerID:                      drawer.ID,
 				IdempotencyKey:                    req.IdempotencyKey,
+				CreatedByID:                       userID,
 			}
 			if err := s.txnRepo.CreateWithTx(dbTx, txn); err != nil {
 				return fmt.Errorf("failed to create transaction: %w", err)

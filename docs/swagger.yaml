@@ -714,9 +714,10 @@ paths:
     delete:
       tags: [Customers]
       summary: Delete a customer
-      description: "**Roles:** ADMIN, MANAGER"
+      description: "**Roles:** ADMIN, MANAGER. Soft delete by default, hard delete if requested."
       parameters:
         - $ref: '#/components/parameters/ID'
+        - $ref: '#/components/parameters/HardDelete'
       responses:
         '200':
           description: Customer deleted
@@ -1474,6 +1475,14 @@ components:
         default: 20
         minimum: 1
         maximum: 100
+    HardDelete:
+      name: hard_delete
+      in: query
+      required: false
+      description: "Perform permanent hard delete"
+      schema:
+        type: boolean
+        default: false
 
   responses:
     BadRequest:
@@ -2052,7 +2061,16 @@ components:
           nullable: true
         loyalty_outlet_id:
           type: string
+          format: uuid
           nullable: true
+
+    DeleteCustomerRequest:
+      type: object
+      properties:
+        hard_delete:
+          type: boolean
+          default: false
+          description: "If true, permanently removes customer. If false, performs soft delete."
 
     # ---- Cash Drawer ----
     CashDrawer:

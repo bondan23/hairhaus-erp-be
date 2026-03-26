@@ -82,17 +82,47 @@ func (h *CustomerHandler) Update(c *gin.Context) {
 	utils.RespondSuccess(c, "Customer updated", customer)
 }
 
+// Delete godoc
+// @Summary Delete customer
+// @Description Soft delete by default, hard delete if hard_delete=true
+// @Tags customers
+// @Accept json
+// @Produce json
+// @Param id path string true "Customer ID"
+// @Param query query dto.DeleteCustomerRequest false "Delete options"
+// @Success 200 {object} map[string]interface{}
+// @Router /customers/{id} [delete]
 func (h *CustomerHandler) Delete(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		utils.RespondValidationError(c, "Invalid ID")
 		return
 	}
-	if err := h.service.Delete(id); err != nil {
-		utils.RespondError(c, http.StatusInternalServerError, err.Error())
+
+	var query dto.DeleteCustomerRequest
+	if err := c.ShouldBindQuery(&query); err != nil {
+		utils.RespondValidationError(c, err.Error())
 		return
 	}
-	utils.RespondSuccess(c, "Customer deleted", nil)
+
+	hardDelete := query.HardDelete
+	var deleteErr error
+	if hardDelete {
+		deleteErr = h.service.HardDelete(id)
+	} else {
+		deleteErr = h.service.Delete(id)
+	}
+
+	if deleteErr != nil {
+		utils.RespondError(c, http.StatusInternalServerError, deleteErr.Error())
+		return
+	}
+
+	message := "Customer deleted"
+	if hardDelete {
+		message = "Customer permanently deleted"
+	}
+	utils.RespondSuccess(c, message, nil)
 }
 
 // Identify godoc

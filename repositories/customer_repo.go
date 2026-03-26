@@ -14,6 +14,7 @@ type CustomerRepository interface {
 	FindByPhone(phone string) (*models.Customer, error)
 	Update(customer *models.Customer) error
 	Delete(id uuid.UUID) error
+	HardDelete(id uuid.UUID) error
 }
 
 type customerRepository struct {
@@ -67,4 +68,8 @@ func (r *customerRepository) Update(customer *models.Customer) error {
 
 func (r *customerRepository) Delete(id uuid.UUID) error {
 	return r.db.Delete(&models.Customer{}, "id = ?", id).Error
+}
+
+func (r *customerRepository) HardDelete(id uuid.UUID) error {
+	return r.db.Unscoped().Delete(&models.Customer{}, "id = ?", id).Error
 }

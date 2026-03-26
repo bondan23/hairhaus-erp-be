@@ -142,6 +142,10 @@ type UpdateCustomerRequest struct {
 	LoyaltyOutletID *string `json:"loyalty_outlet_id"`
 }
 
+type DeleteCustomerRequest struct {
+	HardDelete bool `form:"hard_delete"`
+}
+
 type IdentifyCustomerRequest struct {
 	Phone string `json:"phone" binding:"required"`
 }
