@@ -688,6 +688,28 @@ paths:
         '201':
           description: Customer created
 
+  /customers/deleted:
+    get:
+      tags: [Customers]
+      summary: List all soft-deleted customers
+      description: Returns a paginated list of customers that have been soft-deleted
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Paginated soft-deleted customers
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/DeletedCustomerResponse'
+
   /customers/{id}:
     get:
       tags: [Customers]
@@ -721,6 +743,10 @@ paths:
       responses:
         '200':
           description: Customer deleted
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/SuccessResponse'
 
   /customers/identify:
     post:
@@ -762,7 +788,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessResponse'
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - properties:
+                      data:
+                        $ref: '#/components/schemas/RegisterLoyaltyResponse'
 
   /customers/loyalty/otp:
     post:
@@ -1909,6 +1939,20 @@ components:
           nullable: true
 
     # ---- Customer ----
+    DeletedCustomerResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        phone:
+          type: string
+        deleted_at:
+          type: string
+          format: date-time
+
     Customer:
       type: object
       properties:
@@ -2024,6 +2068,15 @@ components:
           type: string
           enum: [Male, Female]
           example: "Male"
+
+    RegisterLoyaltyResponse:
+      type: object
+      properties:
+        customer:
+          $ref: '#/components/schemas/Customer'
+        requires_verification:
+          type: boolean
+          example: true
 
     CreateCustomerRequest:
       type: object

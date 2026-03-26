@@ -49,6 +49,37 @@ func (h *CustomerHandler) GetAll(c *gin.Context) {
 	utils.RespondPaginated(c, customers, page, pageSize, total)
 }
 
+// GetAllSoftDelete godoc
+// @Summary List all soft-deleted customers
+// @Description Returns a paginated list of customers that have been soft-deleted
+// @Tags customers
+// @Accept json
+// @Produce json
+// @Param page query int false "Page number"
+// @Param page_size query int false "Page size"
+// @Success 200 {object} map[string]interface{}
+// @Router /customers/deleted [get]
+func (h *CustomerHandler) GetAllSoftDelete(c *gin.Context) {
+	page, pageSize := utils.GetPaginationParams(c)
+	customers, total, err := h.service.GetAllDeleted(utils.GetOffset(page, pageSize), pageSize)
+	if err != nil {
+		utils.RespondError(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	response := make([]dto.DeletedCustomerResponse, len(customers))
+	for i, cust := range customers {
+		response[i] = dto.DeletedCustomerResponse{
+			ID:        cust.ID,
+			Name:      cust.Name,
+			Phone:     cust.Phone,
+			DeletedAt: cust.DeletedAt.Time,
+		}
+	}
+
+	utils.RespondPaginated(c, response, page, pageSize, total)
+}
+
 func (h *CustomerHandler) GetByID(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -168,12 +199,23 @@ func (h *CustomerHandler) RegisterLoyalty(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.Register(c, req, h.loyaltyClient); err != nil {
+	customer, requiresVerification, err := h.service.Register(c, req, h.loyaltyClient)
+	if err != nil {
 		utils.RespondError(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	utils.RespondSuccess(c, "Loyalty registration initiated", nil)
+	response := dto.RegisterLoyaltyResponse{
+		Customer:             customer,
+		RequiresVerification: requiresVerification,
+	}
+
+	message := "Loyalty registered, but requires verification"
+	if !requiresVerification {
+		message = "Loyalty already verified"
+	}
+
+	utils.RespondSuccess(c, message, response)
 }
 
 // RequestLoyaltyOTP godoc

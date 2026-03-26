@@ -148,6 +148,7 @@ func SetupRouter(h *Handlers, jwtSecret string) *gin.Engine {
 		customers := protected.Group("/customers")
 		{
 			customers.GET("", h.Customer.GetAll)
+			customers.GET("/deleted", h.Customer.GetAllSoftDelete)
 			customers.GET("/:id", h.Customer.GetByID)
 			customers.POST("", h.Customer.Create)
 			customers.PUT("/:id", h.Customer.Update)

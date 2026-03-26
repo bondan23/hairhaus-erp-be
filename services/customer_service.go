@@ -38,6 +38,10 @@ func (s *CustomerService) GetAll(offset, limit int, name, phone string) ([]model
 	return s.repo.FindAll(offset, limit, name, phone)
 }
 
+func (s *CustomerService) GetAllDeleted(offset, limit int) ([]models.Customer, int64, error) {
+	return s.repo.FindAllDeleted(offset, limit)
+}
+
 func (s *CustomerService) GetByID(id uuid.UUID) (*models.Customer, error) {
 	return s.repo.FindByID(id)
 }
@@ -114,20 +118,57 @@ func (s *CustomerService) Identify(cCtx *gin.Context, phone string, loyaltyClien
 	return nil, loyaltyResp, nil
 }
 
-func (s *CustomerService) Register(cCtx *gin.Context, req dto.RegisterLoyaltyRequest, loyaltyClient *clients.LoyaltyClient) error {
-	// 1. Check if phone already exists in Loyalty
-	check, err := loyaltyClient.CheckMember(cCtx, req.Phone)
-	if err == nil && check.UserStatus != "Unregistered" {
-		return errors.New("phone number already registered in loyalty system")
+func (s *CustomerService) Register(cCtx *gin.Context, req dto.RegisterLoyaltyRequest, loyaltyClient *clients.LoyaltyClient) (*models.Customer, bool, error) {
+	// 1. Check ERP by phone
+	existingCustomer, err := s.repo.FindByPhone(req.Phone)
+	if err == nil && existingCustomer != nil {
+		if existingCustomer.IsLoyaltyVerified {
+			return nil, false, errors.New("phone number already registered and verified")
+		}
+		// Exists but not verified
+		return existingCustomer, true, nil
 	}
 
-	// 2. Register in Loyalty
+	// 2. Check if phone already exists in Loyalty
+	check, err := loyaltyClient.CheckMember(cCtx, req.Phone)
+	if err == nil {
+		switch check.UserStatus {
+		case "Verified":
+			// Found in loyalty and verified, map to ERP
+			customer := &models.Customer{
+				Name:              req.Name,
+				Phone:             req.Phone,
+				Gender:            &req.Gender,
+				LoyaltyUserID:     check.UserID,
+				IsLoyaltyVerified: true,
+			}
+			if err := s.repo.Create(customer); err != nil {
+				return nil, false, err
+			}
+			return customer, false, nil
+		case "NotVerified":
+			// Found in loyalty but not verified, map to ERP
+			customer := &models.Customer{
+				Name:              req.Name,
+				Phone:             req.Phone,
+				Gender:            &req.Gender,
+				LoyaltyUserID:     check.UserID,
+				IsLoyaltyVerified: false,
+			}
+			if err := s.repo.Create(customer); err != nil {
+				return nil, false, err
+			}
+			return customer, true, nil
+		}
+	}
+
+	// 3. Register in Loyalty (since not found or unregistered)
 	userID, err := loyaltyClient.RegisterMember(cCtx, req.Phone, req.Name, req.Gender)
 	if err != nil {
-		return err
+		return nil, false, err
 	}
 
-	// 3. Create ERP record (unverified)
+	// 4. Create ERP record (unverified)
 	customer := &models.Customer{
 		Name:              req.Name,
 		Phone:             req.Phone,
@@ -135,7 +176,11 @@ func (s *CustomerService) Register(cCtx *gin.Context, req dto.RegisterLoyaltyReq
 		LoyaltyUserID:     &userID,
 		IsLoyaltyVerified: false,
 	}
-	return s.repo.Create(customer)
+	if err := s.repo.Create(customer); err != nil {
+		return nil, false, err
+	}
+
+	return customer, true, nil
 }
 
 func (s *CustomerService) RequestOTP(cCtx *gin.Context, phone string, userID string, loyaltyClient *clients.LoyaltyClient) error {

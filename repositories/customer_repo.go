@@ -10,6 +10,7 @@ import (
 type CustomerRepository interface {
 	Create(customer *models.Customer) error
 	FindAll(offset, limit int, name, phone string) ([]models.Customer, int64, error)
+	FindAllDeleted(offset, limit int) ([]models.Customer, int64, error)
 	FindByID(id uuid.UUID) (*models.Customer, error)
 	FindByPhone(phone string) (*models.Customer, error)
 	Update(customer *models.Customer) error
@@ -39,6 +40,15 @@ func (r *customerRepository) FindAll(offset, limit int, name, phone string) ([]m
 	if phone != "" {
 		query = query.Where("phone LIKE ?", "%"+phone+"%")
 	}
+	query.Count(&total)
+	err := query.Offset(offset).Limit(limit).Find(&customers).Error
+	return customers, total, err
+}
+
+func (r *customerRepository) FindAllDeleted(offset, limit int) ([]models.Customer, int64, error) {
+	var customers []models.Customer
+	var total int64
+	query := r.db.Unscoped().Model(&models.Customer{}).Where("deleted_at IS NOT NULL")
 	query.Count(&total)
 	err := query.Offset(offset).Limit(limit).Find(&customers).Error
 	return customers, total, err

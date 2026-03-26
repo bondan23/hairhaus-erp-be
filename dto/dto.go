@@ -1,6 +1,12 @@
 package dto
 
-import "github.com/google/uuid"
+import (
+	"time"
+
+	"hairhaus-pos-be/models"
+
+	"github.com/google/uuid"
+)
 
 // IMPORTANT!!! PLEASE UPDATE SWAGGER DOCS IF YOU UPDATE THIS FILE
 
@@ -146,6 +152,13 @@ type DeleteCustomerRequest struct {
 	HardDelete bool `form:"hard_delete"`
 }
 
+type DeletedCustomerResponse struct {
+	ID        uuid.UUID `json:"id"`
+	Name      string    `json:"name"`
+	Phone     string    `json:"phone"`
+	DeletedAt time.Time `json:"deleted_at"`
+}
+
 type IdentifyCustomerRequest struct {
 	Phone string `json:"phone" binding:"required"`
 }
@@ -186,6 +199,11 @@ type RegisterLoyaltyRequest struct {
 	Phone  string `json:"phone" binding:"required"`
 	Name   string `json:"name" binding:"required"`
 	Gender string `json:"gender" binding:"required"`
+}
+
+type RegisterLoyaltyResponse struct {
+	Customer             *models.Customer `json:"customer"`
+	RequiresVerification bool             `json:"requires_verification"`
 }
 
 // ===== Cash Drawer =====
