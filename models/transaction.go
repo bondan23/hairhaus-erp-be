@@ -32,8 +32,8 @@ type Transaction struct {
 
 	Status string `gorm:"not null;default:'DRAFT'" json:"status"` // DRAFT | COMPLETED | VOIDED
 
-	CashDrawerID uuid.UUID  `gorm:"type:uuid;not null" json:"cash_drawer_id"`
-	CashDrawer   CashDrawer `gorm:"foreignKey:CashDrawerID" json:"cash_drawer,omitempty"`
+	CashDrawerID uuid.UUID `gorm:"type:uuid;not null" json:"cash_drawer_id"`
+	// CashDrawer   CashDrawer `gorm:"foreignKey:CashDrawerID" json:"cash_drawer,omitempty"`
 
 	IdempotencyKey string `gorm:"uniqueIndex" json:"idempotency_key,omitempty"`
 

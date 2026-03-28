@@ -1799,6 +1799,60 @@ components:
           type: boolean
 
     # ---- Stylist ----
+    Stylist:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    Affiliate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        loyalty_user_id:
+          type: string
+        affiliate_code:
+          type: string
+        name:
+          type: string
+        commission_type:
+          type: string
+        commission_percentage:
+          type: number
+          format: double
+        commission_fixed:
+          type: integer
+          format: int64
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+
     CreateStylistRequest:
       type: object
       required: [name]
@@ -2195,10 +2249,23 @@ components:
         branch_id:
           type: string
           format: uuid
+        branch:
+          $ref: '#/components/schemas/Branch'
         customer_id:
           type: string
           format: uuid
           nullable: true
+        customer:
+          $ref: '#/components/schemas/Customer'
+        customer_name:
+          type: string
+          nullable: true
+        affiliate_id:
+          type: string
+          format: uuid
+          nullable: true
+        affiliate:
+          $ref: '#/components/schemas/Affiliate'
         subtotal_amount:
           type: integer
           format: int64
@@ -2214,8 +2281,20 @@ components:
         status:
           type: string
           enum: [DRAFT, COMPLETED, VOIDED]
+        cash_drawer_id:
+          type: string
+          format: uuid
         idempotency_key:
           type: string
+        edited_by_id:
+          type: string
+          format: uuid
+          nullable: true
+        edit_reason:
+          type: string
+        created_by_id:
+          type: string
+          format: uuid
         items:
           type: array
           items:
@@ -2227,6 +2306,13 @@ components:
         created_at:
           type: string
           format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
 
     TransactionItem:
       type: object
@@ -2234,6 +2320,20 @@ components:
         id:
           type: string
           format: uuid
+        transaction_id:
+          type: string
+          format: uuid
+        product_id:
+          type: string
+          format: uuid
+        product:
+          $ref: '#/components/schemas/Product'
+        stylist_id:
+          type: string
+          format: uuid
+          nullable: true
+        stylist:
+          $ref: '#/components/schemas/Stylist'
         product_name_snapshot:
           type: string
         product_type_snapshot:
@@ -2266,6 +2366,16 @@ components:
         cost_price_snapshot:
           type: integer
           format: int64
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
 
     Payment:
       type: object
