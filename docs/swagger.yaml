@@ -2085,6 +2085,10 @@ components:
         phoneNumber:
           type: string
           example: "081234567890"
+        points:
+          type: number
+          format: float
+          example: 150.5
 
     LoyaltyOTPResponse:
       type: object

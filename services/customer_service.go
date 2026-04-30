@@ -81,7 +81,14 @@ func (s *CustomerService) HardDelete(id uuid.UUID) error {
 }
 
 func (s *CustomerService) Identify(cCtx *gin.Context, phone string, loyaltyClient *clients.LoyaltyClient) (*models.Customer, *dto.LoyaltyCheckResponse, error) {
-	// 1. Search ERP Customer Table
+	// 1. Check Loyalty Member API
+	loyaltyResp, err := loyaltyClient.CheckMember(cCtx, phone)
+	if err != nil {
+		// If loyalty API fails, we still return not found in ERP
+		return nil, nil, nil
+	}
+
+	// 2. Search ERP Customer Table
 	customer, err := s.repo.FindByPhone(phone)
 	if err == nil {
 		loyaltyInfo := &dto.LoyaltyCheckResponse{
@@ -89,18 +96,12 @@ func (s *CustomerService) Identify(cCtx *gin.Context, phone string, loyaltyClien
 			UserID:      customer.LoyaltyUserID,
 			LocationID:  customer.LoyaltyOutletID,
 			PhoneNumber: customer.Phone,
+			Points:      loyaltyResp.Points,
 		}
 		if !customer.IsLoyaltyVerified {
 			loyaltyInfo.UserStatus = "NotVerified"
 		}
 		return customer, loyaltyInfo, nil
-	}
-
-	// 2. Check Loyalty Member API
-	loyaltyResp, err := loyaltyClient.CheckMember(cCtx, phone)
-	if err != nil {
-		// If loyalty API fails, we still return not found in ERP
-		return nil, nil, nil
 	}
 
 	// 3. If loyalty member is found, create ERP customer
@@ -129,48 +130,42 @@ func (s *CustomerService) Identify(cCtx *gin.Context, phone string, loyaltyClien
 }
 
 func (s *CustomerService) Register(cCtx *gin.Context, req dto.RegisterLoyaltyRequest, loyaltyClient *clients.LoyaltyClient) (*models.Customer, bool, error) {
+	var customer *models.Customer
+
 	// 1. Check ERP by phone
 	existingCustomer, err := s.repo.FindByPhone(req.Phone)
 	if err == nil && existingCustomer != nil {
 		if existingCustomer.IsLoyaltyVerified {
 			return nil, false, errors.New("phone number already registered and verified")
 		}
-		// Exists but not verified
-		return existingCustomer, true, nil
+		// Exists but not verified -> Keep reference and proceed
+		customer = existingCustomer
 	}
 
 	// 2. Check if phone already exists in Loyalty
 	check, err := loyaltyClient.CheckMember(cCtx, req.Phone)
 	if err == nil {
-		switch check.UserStatus {
-		case "Verified":
-			// Found in loyalty and verified, map to ERP
-			customer := &models.Customer{
-				Name:              req.Name,
-				Phone:             req.Phone,
-				Gender:            &req.Gender,
-				LoyaltyUserID:     check.UserID,
-				LoyaltyOutletID:   check.LocationID,
-				IsLoyaltyVerified: true,
+		if check.UserStatus == "Verified" || check.UserStatus == "NotVerified" {
+			if customer == nil {
+				customer = &models.Customer{}
 			}
-			if err := s.repo.Create(customer); err != nil {
-				return nil, false, err
+			customer.Name = req.Name
+			customer.Phone = req.Phone
+			customer.Gender = &req.Gender
+			customer.LoyaltyUserID = check.UserID
+			customer.LoyaltyOutletID = check.LocationID
+			customer.IsLoyaltyVerified = check.UserStatus == "Verified"
+
+			if customer.ID == uuid.Nil {
+				if err := s.repo.Create(customer); err != nil {
+					return nil, false, err
+				}
+			} else {
+				if err := s.repo.Update(customer); err != nil {
+					return nil, false, err
+				}
 			}
-			return customer, false, nil
-		case "NotVerified":
-			// Found in loyalty but not verified, map to ERP
-			customer := &models.Customer{
-				Name:              req.Name,
-				Phone:             req.Phone,
-				Gender:            &req.Gender,
-				LoyaltyUserID:     check.UserID,
-				LoyaltyOutletID:   check.LocationID,
-				IsLoyaltyVerified: false,
-			}
-			if err := s.repo.Create(customer); err != nil {
-				return nil, false, err
-			}
-			return customer, true, nil
+			return customer, !customer.IsLoyaltyVerified, nil
 		}
 	}
 
@@ -180,17 +175,26 @@ func (s *CustomerService) Register(cCtx *gin.Context, req dto.RegisterLoyaltyReq
 		return nil, false, err
 	}
 
-	// 4. Create ERP record (unverified)
-	customer := &models.Customer{
-		Name:              req.Name,
-		Phone:             req.Phone,
-		Gender:            &req.Gender,
-		LoyaltyUserID:     &userID,
-		LoyaltyOutletID:   &req.OutletID,
-		IsLoyaltyVerified: false,
+	// 4. Create or Update ERP record
+	if customer == nil {
+		customer = &models.Customer{}
 	}
-	if err := s.repo.Create(customer); err != nil {
-		return nil, false, err
+
+	customer.Name = req.Name
+	customer.Phone = req.Phone
+	customer.Gender = &req.Gender
+	customer.LoyaltyUserID = &userID
+	customer.LoyaltyOutletID = &req.OutletID
+	customer.IsLoyaltyVerified = false
+
+	if customer.ID == uuid.Nil {
+		if err := s.repo.Create(customer); err != nil {
+			return nil, false, err
+		}
+	} else {
+		if err := s.repo.Update(customer); err != nil {
+			return nil, false, err
+		}
 	}
 
 	return customer, true, nil

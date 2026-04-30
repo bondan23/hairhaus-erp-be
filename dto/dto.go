@@ -168,6 +168,7 @@ type LoyaltyCheckResponse struct {
 	UserID      *string `json:"userID"`
 	LocationID  *string `json:"locationID"`
 	PhoneNumber string  `json:"phoneNumber"`
+	Points      float64 `json:"points"`
 }
 
 type LoyaltyOTPResponse struct {
