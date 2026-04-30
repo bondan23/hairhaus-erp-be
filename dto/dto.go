@@ -164,11 +164,11 @@ type IdentifyCustomerRequest struct {
 }
 
 type LoyaltyCheckResponse struct {
-	UserStatus  string  `json:"userStatus"`
-	UserID      *string `json:"userID"`
-	LocationID  *string `json:"locationID"`
-	PhoneNumber string  `json:"phoneNumber"`
-	Points      float64 `json:"points"`
+	UserStatus  string   `json:"userStatus"`
+	UserID      *string  `json:"userID"`
+	LocationID  *string  `json:"locationID"`
+	PhoneNumber string   `json:"phoneNumber"`
+	Points      *float64 `json:"points"`
 }
 
 type LoyaltyOTPResponse struct {
@@ -189,6 +189,28 @@ type LoyaltyCustomerInfo struct {
 	Point              float64 `json:"point"`
 	UserId             *string `json:"userId"`
 	RegisteredLocation *string `json:"registeredLocationId"`
+}
+
+type LoyaltyCheckInMetadata struct {
+	Type string                   `json:"type" binding:"required"`
+	Data []map[string]interface{} `json:"data" binding:"required"`
+}
+
+type LoyaltyCheckInRequest struct {
+	Code     string                  `json:"code" binding:"required"`
+	Amount   int64                   `json:"amount" binding:"required,min=1,max=2500000"`
+	Notes    string                  `json:"notes"`
+	Metadata *LoyaltyCheckInMetadata `json:"metadata,omitempty"`
+}
+
+type LoyaltyCheckInResponse struct {
+	Code        string  `json:"code"`
+	Message     string  `json:"message"`
+	Success     bool    `json:"success"`
+	NewPoint    float64 `json:"newPoint"`
+	TotalPoint  float64 `json:"totalPoint"`
+	Name        string  `json:"name"`
+	PhoneNumber string  `json:"phoneNumber"`
 }
 
 type VerifyLoyaltyOTPRequest struct {

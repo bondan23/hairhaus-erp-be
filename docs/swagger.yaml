@@ -837,6 +837,29 @@ paths:
               schema:
                 $ref: '#/components/schemas/Customer'
 
+  /customers/loyalty/check-in:
+    post:
+      tags: [Customers]
+      summary: Check-in a customer using QR code and amount
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoyaltyCheckInRequest'
+      responses:
+        '200':
+          description: Check-in successful
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - properties:
+                      data:
+                        $ref: '#/components/schemas/LoyaltyCheckInResponse'
+
+
   # ==================== CASH DRAWERS ====================
   /drawers/open:
     post:
@@ -2085,10 +2108,57 @@ components:
         phoneNumber:
           type: string
           example: "081234567890"
-        points:
+
+    LoyaltyCheckInRequest:
+      type: object
+      required: [code, amount]
+      properties:
+        code:
+          type: string
+          example: "QR123"
+        amount:
+          type: integer
+          example: 150000
+        notes:
+          type: string
+          example: "Check in note"
+        metadata:
+          type: object
+          properties:
+            type:
+              type: string
+            data:
+              type: array
+              items:
+                type: object
+          required: [type, data]
+
+    LoyaltyCheckInResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          example: "SUCCESS"
+        message:
+          type: string
+          example: ""
+        success:
+          type: boolean
+          example: true
+        newPoint:
+          type: number
+          format: float
+          example: 15.5
+        totalPoint:
           type: number
           format: float
           example: 150.5
+        name:
+          type: string
+          example: "John Doe"
+        phoneNumber:
+          type: string
+          example: "081234567890"
 
     LoyaltyOTPResponse:
       type: object

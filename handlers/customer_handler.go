@@ -272,3 +272,27 @@ func (h *CustomerHandler) VerifyLoyaltyOTP(c *gin.Context) {
 
 	utils.RespondCreated(c, "Customer verified and created", customer)
 }
+
+// CheckInLoyalty godoc
+// @Summary Check-in a customer using QR code and amount
+// @Tags customers
+// @Accept json
+// @Produce json
+// @Param request body dto.LoyaltyCheckInRequest true "Check-in Request"
+// @Success 200 {object} dto.LoyaltyCheckInResponse
+// @Router /customers/loyalty/check-in [post]
+func (h *CustomerHandler) CheckInLoyalty(c *gin.Context) {
+	var req dto.LoyaltyCheckInRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.RespondValidationError(c, err.Error())
+		return
+	}
+
+	resp, err := h.loyaltyClient.CheckIn(c, req.Code, req.Amount, req.Notes, req.Metadata)
+	if err != nil {
+		utils.RespondError(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.RespondSuccess(c, "Check-in successful", resp)
+}

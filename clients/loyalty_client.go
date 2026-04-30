@@ -84,10 +84,15 @@ func (c *LoyaltyClient) CheckMember(cCtx *gin.Context, phone string) (*dto.Loyal
 
 // RegisterMember registers a new member in the loyalty system.
 func (c *LoyaltyClient) RegisterMember(cCtx *gin.Context, phone, name, gender, outletID string) (string, error) {
+	passCode := "1234"
+	if len(phone) >= 4 {
+		passCode = phone[len(phone)-4:]
+	}
+
 	reqBody := map[string]string{
 		"phoneNumber":        phone,
 		"name":               name,
-		"passCode":           "123456",
+		"passCode":           passCode,
 		"gender":             gender,
 		"registerLocationId": outletID,
 	}
@@ -198,6 +203,44 @@ func (c *LoyaltyClient) GetCustomerInfo(cCtx *gin.Context, phone string) (*dto.L
 	defer resp.Body.Close()
 
 	var result dto.LoyaltyCustomerInfo
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+// CheckIn registers a customer check-in with a given code and amount.
+func (c *LoyaltyClient) CheckIn(cCtx *gin.Context, code string, amount int64, notes string, metadata *dto.LoyaltyCheckInMetadata) (*dto.LoyaltyCheckInResponse, error) {
+	reqBody := map[string]interface{}{
+		"code":   code,
+		"amount": amount,
+	}
+	if notes != "" {
+		reqBody["notes"] = notes
+	}
+	if metadata != nil {
+		reqBody["metadata"] = metadata
+	}
+	jsonBody, _ := json.Marshal(reqBody)
+
+	req, err := c.NewRequest(cCtx, "POST", "/qr/check-in")
+	if err != nil {
+		return nil, err
+	}
+	req.Body = io.NopCloser(bytes.NewBuffer(jsonBody))
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("loyalty check-in failed: status %d", resp.StatusCode)
+	}
+
+	var result dto.LoyaltyCheckInResponse
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
 	}

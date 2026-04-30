@@ -81,27 +81,31 @@ func (s *CustomerService) HardDelete(id uuid.UUID) error {
 }
 
 func (s *CustomerService) Identify(cCtx *gin.Context, phone string, loyaltyClient *clients.LoyaltyClient) (*models.Customer, *dto.LoyaltyCheckResponse, error) {
-	// 1. Check Loyalty Member API
-	loyaltyResp, err := loyaltyClient.CheckMember(cCtx, phone)
-	if err != nil {
-		// If loyalty API fails, we still return not found in ERP
-		return nil, nil, nil
-	}
-
-	// 2. Search ERP Customer Table
+	// 1. Search ERP Customer Table
 	customer, err := s.repo.FindByPhone(phone)
 	if err == nil {
+		customerInfo, err := loyaltyClient.GetCustomerInfo(cCtx, phone)
+		if err != nil {
+			return nil, nil, err
+		}
 		loyaltyInfo := &dto.LoyaltyCheckResponse{
 			UserStatus:  "Verified",
 			UserID:      customer.LoyaltyUserID,
 			LocationID:  customer.LoyaltyOutletID,
 			PhoneNumber: customer.Phone,
-			Points:      loyaltyResp.Points,
+			Points:      &customerInfo.Point,
 		}
 		if !customer.IsLoyaltyVerified {
 			loyaltyInfo.UserStatus = "NotVerified"
 		}
 		return customer, loyaltyInfo, nil
+	}
+
+	// 2. Check Loyalty Member API
+	loyaltyResp, err := loyaltyClient.CheckMember(cCtx, phone)
+	if err != nil {
+		// If loyalty API fails, we still return not found in ERP
+		return nil, nil, nil
 	}
 
 	// 3. If loyalty member is found, create ERP customer
@@ -116,8 +120,10 @@ func (s *CustomerService) Identify(cCtx *gin.Context, phone string, loyaltyClien
 		info, err := loyaltyClient.GetCustomerInfo(cCtx, phone)
 		if err == nil && info != nil && info.Name != nil {
 			newCustomer.Name = *info.Name
+			loyaltyResp.Points = &info.Point
 		} else {
 			newCustomer.Name = "Loyalty Member"
+			loyaltyResp.Points = nil
 		}
 
 		if err := s.repo.Create(newCustomer); err != nil {
