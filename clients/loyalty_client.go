@@ -83,12 +83,13 @@ func (c *LoyaltyClient) CheckMember(cCtx *gin.Context, phone string) (*dto.Loyal
 }
 
 // RegisterMember registers a new member in the loyalty system.
-func (c *LoyaltyClient) RegisterMember(cCtx *gin.Context, phone, name, gender string) (string, error) {
+func (c *LoyaltyClient) RegisterMember(cCtx *gin.Context, phone, name, gender, outletID string) (string, error) {
 	reqBody := map[string]string{
-		"phoneNumber": phone,
-		"name":        name,
-		"passCode":    "123456",
-		"gender":      gender,
+		"phoneNumber":        phone,
+		"name":               name,
+		"passCode":           "123456",
+		"gender":             gender,
+		"registerLocationId": outletID,
 	}
 	jsonBody, _ := json.Marshal(reqBody)
 

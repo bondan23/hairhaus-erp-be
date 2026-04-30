@@ -84,7 +84,16 @@ func (s *CustomerService) Identify(cCtx *gin.Context, phone string, loyaltyClien
 	// 1. Search ERP Customer Table
 	customer, err := s.repo.FindByPhone(phone)
 	if err == nil {
-		return customer, nil, nil
+		loyaltyInfo := &dto.LoyaltyCheckResponse{
+			UserStatus:  "Verified",
+			UserID:      customer.LoyaltyUserID,
+			LocationID:  customer.LoyaltyOutletID,
+			PhoneNumber: customer.Phone,
+		}
+		if !customer.IsLoyaltyVerified {
+			loyaltyInfo.UserStatus = "NotVerified"
+		}
+		return customer, loyaltyInfo, nil
 	}
 
 	// 2. Check Loyalty Member API
@@ -99,6 +108,7 @@ func (s *CustomerService) Identify(cCtx *gin.Context, phone string, loyaltyClien
 		newCustomer := &models.Customer{
 			Phone:             phone,
 			LoyaltyUserID:     loyaltyResp.UserID,
+			LoyaltyOutletID:   loyaltyResp.LocationID,
 			IsLoyaltyVerified: loyaltyResp.UserStatus == "Verified",
 		}
 
@@ -140,6 +150,7 @@ func (s *CustomerService) Register(cCtx *gin.Context, req dto.RegisterLoyaltyReq
 				Phone:             req.Phone,
 				Gender:            &req.Gender,
 				LoyaltyUserID:     check.UserID,
+				LoyaltyOutletID:   check.LocationID,
 				IsLoyaltyVerified: true,
 			}
 			if err := s.repo.Create(customer); err != nil {
@@ -153,6 +164,7 @@ func (s *CustomerService) Register(cCtx *gin.Context, req dto.RegisterLoyaltyReq
 				Phone:             req.Phone,
 				Gender:            &req.Gender,
 				LoyaltyUserID:     check.UserID,
+				LoyaltyOutletID:   check.LocationID,
 				IsLoyaltyVerified: false,
 			}
 			if err := s.repo.Create(customer); err != nil {
@@ -163,7 +175,7 @@ func (s *CustomerService) Register(cCtx *gin.Context, req dto.RegisterLoyaltyReq
 	}
 
 	// 3. Register in Loyalty (since not found or unregistered)
-	userID, err := loyaltyClient.RegisterMember(cCtx, req.Phone, req.Name, req.Gender)
+	userID, err := loyaltyClient.RegisterMember(cCtx, req.Phone, req.Name, req.Gender, req.OutletID)
 	if err != nil {
 		return nil, false, err
 	}
@@ -174,6 +186,7 @@ func (s *CustomerService) Register(cCtx *gin.Context, req dto.RegisterLoyaltyReq
 		Phone:             req.Phone,
 		Gender:            &req.Gender,
 		LoyaltyUserID:     &userID,
+		LoyaltyOutletID:   &req.OutletID,
 		IsLoyaltyVerified: false,
 	}
 	if err := s.repo.Create(customer); err != nil {

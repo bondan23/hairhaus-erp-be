@@ -79,15 +79,14 @@ func (s *TransactionService) SaveTransaction(req dto.SaveTransactionRequest, use
 		affiliate = aff
 	}
 
-	// customer, err := s.customerRepo.FindByID(req.CustomerID)
-	// if err != nil {
-	// 	return nil, errors.New("customer not found")
-	// }
+	if req.CustomerID != nil {
+		_, err := s.customerRepo.FindByID(*req.CustomerID)
+		if err != nil {
+			return nil, errors.New("customer not found")
+		}
+	}
 
 	customerName := req.CustomerName
-	// if customerName == nil {
-	// 	customerName = &customer.Name
-	// }
 
 	// XOR Discount Check
 	var hasItemDiscounts bool
@@ -220,7 +219,7 @@ func (s *TransactionService) SaveTransaction(req dto.SaveTransactionRequest, use
 			InvoiceNo:                         invoiceNo,
 			BranchID:                          req.BranchID,
 			CustomerID:                        req.CustomerID,
-			CustomerName:                      customerName,
+			CustomerName:                      &customerName,
 			AffiliateID:                       affiliateID,
 			SubtotalAmount:                    subtotal,
 			DiscountAmount:                    req.DiscountAmount,
@@ -273,6 +272,13 @@ func (s *TransactionService) EditDraftTransaction(txnID uuid.UUID, req dto.SaveT
 			return nil, errors.New("invalid affiliate code")
 		}
 		affiliate = aff
+	}
+
+	if req.CustomerID != nil {
+		_, err := s.customerRepo.FindByID(*req.CustomerID)
+		if err != nil {
+			return nil, errors.New("customer not found")
+		}
 	}
 
 	customerName := req.CustomerName
@@ -398,8 +404,14 @@ func (s *TransactionService) EditDraftTransaction(txnID uuid.UUID, req dto.SaveT
 
 		// Update fields
 		txn.BranchID = req.BranchID
+		if req.CustomerID == nil || txn.CustomerID == nil || *req.CustomerID != *txn.CustomerID {
+			txn.Customer = nil
+		}
 		txn.CustomerID = req.CustomerID
-		txn.CustomerName = customerName
+		txn.CustomerName = &customerName
+		if affiliateID == nil || txn.AffiliateID == nil || *affiliateID != *txn.AffiliateID {
+			txn.Affiliate = nil
+		}
 		txn.AffiliateID = affiliateID
 		txn.SubtotalAmount = subtotal
 		txn.DiscountAmount = req.DiscountAmount
@@ -473,15 +485,14 @@ func (s *TransactionService) Checkout(req dto.CheckoutRequest, userID uuid.UUID)
 		affiliate = aff
 	}
 
-	customer, err := s.customerRepo.FindByID(req.CustomerID)
-	if err != nil {
-		return nil, errors.New("customer not found")
+	if req.CustomerID != nil {
+		_, err := s.customerRepo.FindByID(*req.CustomerID)
+		if err != nil {
+			return nil, errors.New("customer not found")
+		}
 	}
 
 	customerName := req.CustomerName
-	if customerName == nil {
-		customerName = &customer.Name
-	}
 
 	var invoiceNo string
 	if draftTxn != nil && draftTxn.InvoiceNo != "" {
@@ -659,8 +670,14 @@ func (s *TransactionService) Checkout(req dto.CheckoutRequest, userID uuid.UUID)
 
 		if draftTxn != nil {
 			txn = draftTxn
-			txn.CustomerID = &req.CustomerID
-			txn.CustomerName = customerName
+			if req.CustomerID == nil || txn.CustomerID == nil || *req.CustomerID != *txn.CustomerID {
+				txn.Customer = nil
+			}
+			txn.CustomerID = req.CustomerID
+			txn.CustomerName = &customerName
+			if affiliateID == nil || txn.AffiliateID == nil || *affiliateID != *txn.AffiliateID {
+				txn.Affiliate = nil
+			}
 			txn.AffiliateID = affiliateID
 			txn.SubtotalAmount = subtotal
 			txn.DiscountAmount = req.DiscountAmount
@@ -685,8 +702,8 @@ func (s *TransactionService) Checkout(req dto.CheckoutRequest, userID uuid.UUID)
 			txn = &models.Transaction{
 				InvoiceNo:                         invoiceNo,
 				BranchID:                          req.BranchID,
-				CustomerID:                        &req.CustomerID,
-				CustomerName:                      customerName,
+				CustomerID:                        req.CustomerID,
+				CustomerName:                      &customerName,
 				AffiliateID:                       affiliateID,
 				SubtotalAmount:                    subtotal,
 				DiscountAmount:                    req.DiscountAmount,

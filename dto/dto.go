@@ -166,6 +166,7 @@ type IdentifyCustomerRequest struct {
 type LoyaltyCheckResponse struct {
 	UserStatus  string  `json:"userStatus"`
 	UserID      *string `json:"userID"`
+	LocationID  *string `json:"locationID"`
 	PhoneNumber string  `json:"phoneNumber"`
 }
 
@@ -196,9 +197,10 @@ type VerifyLoyaltyOTPRequest struct {
 }
 
 type RegisterLoyaltyRequest struct {
-	Phone  string `json:"phone" binding:"required"`
-	Name   string `json:"name" binding:"required"`
-	Gender string `json:"gender" binding:"required"`
+	Phone    string `json:"phone" binding:"required"`
+	Name     string `json:"name" binding:"required"`
+	Gender   string `json:"gender" binding:"required"`
+	OutletID string `json:"outlet_id" binding:"required"`
 }
 
 type RegisterLoyaltyResponse struct {
@@ -220,8 +222,8 @@ type CloseDrawerRequest struct {
 type CheckoutRequest struct {
 	TransactionID  *uuid.UUID            `json:"transaction_id"`
 	BranchID       uuid.UUID             `json:"branch_id" binding:"required"`
-	CustomerID     uuid.UUID             `json:"customer_id" binding:"required"`
-	CustomerName   *string               `json:"customer_name"`
+	CustomerID     *uuid.UUID            `json:"customer_id"`
+	CustomerName   string                `json:"customer_name" binding:"required"`
 	AffiliateCode  string                `json:"affiliate_code"`
 	Items          []CheckoutItemRequest `json:"items" binding:"required,min=1,dive"`
 	Payments       []PaymentRequest      `json:"payments" binding:"required,min=1,dive"`
@@ -232,7 +234,7 @@ type CheckoutRequest struct {
 type SaveTransactionRequest struct {
 	BranchID       uuid.UUID             `json:"branch_id" binding:"required"`
 	CustomerID     *uuid.UUID            `json:"customer_id"`
-	CustomerName   *string               `json:"customer_name"`
+	CustomerName   string                `json:"customer_name" binding:"required"`
 	AffiliateCode  string                `json:"affiliate_code"`
 	Items          []CheckoutItemRequest `json:"items" binding:"required,min=1,dive"`
 	DiscountAmount int64                 `json:"discount_amount" binding:"min=0"`

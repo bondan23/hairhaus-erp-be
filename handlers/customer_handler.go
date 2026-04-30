@@ -178,7 +178,12 @@ func (h *CustomerHandler) Identify(c *gin.Context) {
 		return
 	}
 
-	utils.RespondSuccess(c, "Customer identified", gin.H{
+	message := "Customer identified"
+	if customer == nil {
+		message = "Customer not found"
+	}
+
+	utils.RespondSuccess(c, message, gin.H{
 		"customer":     customer,
 		"loyalty_info": loyaltyInfo,
 	})

@@ -761,7 +761,7 @@ paths:
               $ref: '#/components/schemas/IdentifyCustomerRequest'
       responses:
         '200':
-          description: Customer identified
+          description: Customer identified or not found
           content:
             application/json:
               schema:
@@ -769,8 +769,10 @@ paths:
                 properties:
                   customer:
                     $ref: '#/components/schemas/Customer'
+                    nullable: true
                   loyalty_info:
                     $ref: '#/components/schemas/LoyaltyCheckResponse'
+                    nullable: true
 
   /customers/loyalty/register:
     post:
@@ -1687,6 +1689,8 @@ components:
           type: string
         phone:
           type: string
+        loyalty_outlet_id:
+          type: string
         is_active:
           type: boolean
 
@@ -2054,6 +2058,10 @@ components:
           type: string
           nullable: true
           example: "U12345"
+        locationID:
+          type: string
+          nullable: true
+          example: "L98765"
         phoneNumber:
           type: string
           example: "081234567890"
@@ -2110,7 +2118,7 @@ components:
 
     RegisterLoyaltyRequest:
       type: object
-      required: [phone, name, gender]
+      required: [phone, name, gender, outlet_id]
       properties:
         phone:
           type: string
@@ -2122,6 +2130,9 @@ components:
           type: string
           enum: [Male, Female]
           example: "Male"
+        outlet_id:
+          type: string
+          example: "OUT-001"
 
     RegisterLoyaltyResponse:
       type: object
@@ -2168,7 +2179,6 @@ components:
           nullable: true
         loyalty_outlet_id:
           type: string
-          format: uuid
           nullable: true
 
     DeleteCustomerRequest:
@@ -2394,7 +2404,7 @@ components:
 
     CheckoutRequest:
       type: object
-      required: [branch_id, customer_id, items, payments, idempotency_key]
+      required: [branch_id, customer_name, items, payments, idempotency_key]
       properties:
         transaction_id:
           type: string
@@ -2407,10 +2417,10 @@ components:
         customer_id:
           type: string
           format: uuid
+          nullable: true
         customer_name:
           type: string
-          nullable: true
-          description: "Manual customer name override (optional)"
+          description: "Manual customer name override"
         affiliate_code:
           type: string
           example: "REF-AHMAD"
@@ -2434,7 +2444,7 @@ components:
 
     SaveTransactionRequest:
       type: object
-      required: [branch_id, items]
+      required: [branch_id, customer_name, items]
       properties:
         branch_id:
           type: string
@@ -2445,8 +2455,7 @@ components:
           nullable: true
         customer_name:
           type: string
-          nullable: true
-          description: "Manual customer name override (optional)"
+          description: "Manual customer name override"
         affiliate_code:
           type: string
           example: "REF-AHMAD"
