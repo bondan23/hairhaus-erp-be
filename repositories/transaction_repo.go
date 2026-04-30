@@ -12,8 +12,9 @@ type TransactionRepository interface {
 	CreateWithTx(tx *gorm.DB, txn *models.Transaction) error
 	CreateItemWithTx(tx *gorm.DB, item *models.TransactionItem) error
 	CreatePaymentWithTx(tx *gorm.DB, payment *models.Payment) error
-	DeleteItemsWithTx(tx *gorm.DB, txnID uuid.UUID) error
-	DeletePaymentsWithTx(tx *gorm.DB, txnID uuid.UUID) error
+	DeleteItemsWithTx(tx *gorm.DB, txnID uuid.UUID, hardDelete bool) error
+	DeletePaymentsWithTx(tx *gorm.DB, txnID uuid.UUID, hardDelete bool) error
+	DeleteWithTx(tx *gorm.DB, txnID uuid.UUID, hardDelete bool) error
 	FindByID(id uuid.UUID) (*models.Transaction, error)
 	FindByIdempotencyKey(key string) (*models.Transaction, error)
 	FindByBranchID(branchID uuid.UUID, offset, limit int) ([]models.Transaction, int64, error)
@@ -48,12 +49,28 @@ func (r *transactionRepository) CreatePaymentWithTx(tx *gorm.DB, payment *models
 	return tx.Create(payment).Error
 }
 
-func (r *transactionRepository) DeleteItemsWithTx(tx *gorm.DB, txnID uuid.UUID) error {
-	return tx.Where("transaction_id = ?", txnID).Delete(&models.TransactionItem{}).Error
+func (r *transactionRepository) DeleteItemsWithTx(tx *gorm.DB, txnID uuid.UUID, hardDelete bool) error {
+	query := tx.Where("transaction_id = ?", txnID)
+	if hardDelete {
+		query = query.Unscoped()
+	}
+	return query.Delete(&models.TransactionItem{}).Error
 }
 
-func (r *transactionRepository) DeletePaymentsWithTx(tx *gorm.DB, txnID uuid.UUID) error {
-	return tx.Where("transaction_id = ?", txnID).Delete(&models.Payment{}).Error
+func (r *transactionRepository) DeletePaymentsWithTx(tx *gorm.DB, txnID uuid.UUID, hardDelete bool) error {
+	query := tx.Where("transaction_id = ?", txnID)
+	if hardDelete {
+		query = query.Unscoped()
+	}
+	return query.Delete(&models.Payment{}).Error
+}
+
+func (r *transactionRepository) DeleteWithTx(tx *gorm.DB, txnID uuid.UUID, hardDelete bool) error {
+	query := tx.Where("id = ?", txnID)
+	if hardDelete {
+		query = query.Unscoped()
+	}
+	return query.Delete(&models.Transaction{}).Error
 }
 
 func (r *transactionRepository) FindByID(id uuid.UUID) (*models.Transaction, error) {

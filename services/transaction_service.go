@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
 
 	"hairhaus-pos-be/clients"
 	"hairhaus-pos-be/dto"
@@ -131,13 +130,12 @@ func (s *TransactionService) SaveTransaction(req dto.SaveTransactionRequest, use
 				price = *bp.PriceOverride
 			}
 
-			incomeType := models.IncomeTypeProduct
+			incomeType := product.Category.IncomeType
+			if incomeType == "" {
+				incomeType = models.IncomeTypeOther
+			}
+
 			if product.ProductType == models.ProductTypeService {
-				if strings.ToUpper(product.Category.Code) == models.CategoryCodeHaircut {
-					incomeType = models.IncomeTypeHaircut
-				} else {
-					incomeType = models.IncomeTypeTreatment
-				}
 
 				if incomeType == models.IncomeTypeHaircut && itemReq.StylistID != nil {
 					bs, bsErr := s.bsRepo.FindByBranchAndStylist(req.BranchID, *itemReq.StylistID)
@@ -319,14 +317,12 @@ func (s *TransactionService) EditDraftTransaction(txnID uuid.UUID, req dto.SaveT
 				price = *bp.PriceOverride
 			}
 
-			incomeType := models.IncomeTypeProduct
-			if product.ProductType == models.ProductTypeService {
-				if strings.ToUpper(product.Category.Code) == models.CategoryCodeHaircut {
-					incomeType = models.IncomeTypeHaircut
-				} else {
-					incomeType = models.IncomeTypeTreatment
-				}
+			incomeType := product.Category.IncomeType
+			if incomeType == "" {
+				incomeType = models.IncomeTypeProduct
+			}
 
+			if product.ProductType == models.ProductTypeService {
 				if incomeType == models.IncomeTypeHaircut && itemReq.StylistID != nil {
 					bs, bsErr := s.bsRepo.FindByBranchAndStylist(req.BranchID, *itemReq.StylistID)
 					if bsErr == nil && bs.HaircutPriceOverride != nil {
@@ -423,7 +419,7 @@ func (s *TransactionService) EditDraftTransaction(txnID uuid.UUID, req dto.SaveT
 		}
 
 		// Delete old items and create new ones
-		if err := s.txnRepo.DeleteItemsWithTx(dbTx, txn.ID); err != nil {
+		if err := s.txnRepo.DeleteItemsWithTx(dbTx, txn.ID, true); err != nil {
 			return fmt.Errorf("failed to clear transaction items: %w", err)
 		}
 
@@ -545,14 +541,12 @@ func (s *TransactionService) Checkout(req dto.CheckoutRequest, userID uuid.UUID)
 				price = *bp.PriceOverride
 			}
 
-			incomeType := models.IncomeTypeProduct
-			if product.ProductType == models.ProductTypeService {
-				if strings.ToUpper(product.Category.Code) == models.CategoryCodeHaircut {
-					incomeType = models.IncomeTypeHaircut
-				} else {
-					incomeType = models.IncomeTypeTreatment
-				}
+			incomeType := product.Category.IncomeType
+			if incomeType == "" {
+				incomeType = models.IncomeTypeOther
+			}
 
+			if product.ProductType == models.ProductTypeService {
 				if incomeType == models.IncomeTypeHaircut && itemReq.StylistID != nil {
 					bs, bsErr := s.bsRepo.FindByBranchAndStylist(req.BranchID, *itemReq.StylistID)
 					if bsErr == nil && bs.HaircutPriceOverride != nil {
@@ -691,10 +685,10 @@ func (s *TransactionService) Checkout(req dto.CheckoutRequest, userID uuid.UUID)
 				return fmt.Errorf("failed to update draft transaction: %w", err)
 			}
 
-			if err := s.txnRepo.DeleteItemsWithTx(dbTx, txn.ID); err != nil {
+			if err := s.txnRepo.DeleteItemsWithTx(dbTx, txn.ID, true); err != nil {
 				return fmt.Errorf("failed to clear draft transaction items: %w", err)
 			}
-			if err := s.txnRepo.DeletePaymentsWithTx(dbTx, txn.ID); err != nil {
+			if err := s.txnRepo.DeletePaymentsWithTx(dbTx, txn.ID, true); err != nil {
 				return fmt.Errorf("failed to clear draft payments: %w", err)
 			}
 		} else {
@@ -845,14 +839,12 @@ func (s *TransactionService) EditTransaction(txnID uuid.UUID, req dto.EditTransa
 				price = *bp.PriceOverride
 			}
 
-			incomeType := models.IncomeTypeProduct
-			if product.ProductType == models.ProductTypeService {
-				if strings.ToUpper(product.Category.Code) == models.CategoryCodeHaircut {
-					incomeType = models.IncomeTypeHaircut
-				} else {
-					incomeType = models.IncomeTypeTreatment
-				}
+			incomeType := product.Category.IncomeType
+			if incomeType == "" {
+				incomeType = models.IncomeTypeProduct
+			}
 
+			if product.ProductType == models.ProductTypeService {
 				// If haircut and stylist has override
 				if incomeType == models.IncomeTypeHaircut && itemReq.StylistID != nil {
 					bs, bsErr := s.bsRepo.FindByBranchAndStylist(txn.BranchID, *itemReq.StylistID)
@@ -999,13 +991,13 @@ func (s *TransactionService) EditTransaction(txnID uuid.UUID, req dto.EditTransa
 		txn.TotalAmount = txn.SubtotalAmount - txn.DiscountAmount
 
 		// Validate Payment Total
-		var paymentTotal int64
-		for _, p := range req.Payments {
-			paymentTotal += p.Amount
-		}
-		if paymentTotal != txn.TotalAmount {
-			return fmt.Errorf("payment total (%d) does not match edited transaction total (%d)", paymentTotal, txn.TotalAmount)
-		}
+		// var paymentTotal int64
+		// for _, p := range req.Payments {
+		// 	paymentTotal += p.Amount
+		// }
+		// if paymentTotal != txn.TotalAmount {
+		// 	return fmt.Errorf("payment total (%d) does not match edited transaction total (%d)", paymentTotal, txn.TotalAmount)
+		// }
 
 		// Recalculate Affiliate Commission
 		if txn.AffiliateID != nil {
@@ -1041,10 +1033,10 @@ func (s *TransactionService) EditTransaction(txnID uuid.UUID, req dto.EditTransa
 		}
 
 		// Delete ALL old items and payments
-		if err := s.txnRepo.DeleteItemsWithTx(dbTx, txn.ID); err != nil {
+		if err := s.txnRepo.DeleteItemsWithTx(dbTx, txn.ID, false); err != nil {
 			return fmt.Errorf("failed to clear old transaction items: %w", err)
 		}
-		if err := s.txnRepo.DeletePaymentsWithTx(dbTx, txn.ID); err != nil {
+		if err := s.txnRepo.DeletePaymentsWithTx(dbTx, txn.ID, false); err != nil {
 			return fmt.Errorf("failed to clear old payments: %w", err)
 		}
 
@@ -1128,4 +1120,35 @@ func (s *TransactionService) VoidTransaction(txnID uuid.UUID, userID uuid.UUID, 
 	})
 
 	return txn, nil
+}
+
+func (s *TransactionService) DeleteDraftTransaction(txnID uuid.UUID) error {
+	txn, err := s.txnRepo.FindByID(txnID)
+	if err != nil {
+		return fmt.Errorf("transaction not found: %w", err)
+	}
+
+	if txn.Status != models.TransactionStatusDraft {
+		return errors.New("only DRAFT transactions can be deleted")
+	}
+
+	db := s.txnRepo.DB()
+	return db.Transaction(func(dbTx *gorm.DB) error {
+		// Hard delete items
+		if err := s.txnRepo.DeleteItemsWithTx(dbTx, txnID, true); err != nil {
+			return fmt.Errorf("failed to delete transaction items: %w", err)
+		}
+
+		// Hard delete payments (if any)
+		if err := s.txnRepo.DeletePaymentsWithTx(dbTx, txnID, true); err != nil {
+			return fmt.Errorf("failed to delete transaction payments: %w", err)
+		}
+
+		// Hard delete transaction
+		if err := s.txnRepo.DeleteWithTx(dbTx, txnID, true); err != nil {
+			return fmt.Errorf("failed to delete transaction record: %w", err)
+		}
+
+		return nil
+	})
 }

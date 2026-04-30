@@ -14,6 +14,11 @@ type Config struct {
 	JWT            JWTConfig
 	Server         ServerConfig
 	LoyaltyService LoyaltyServiceConfig
+	Transaction    TransactionConfig
+}
+
+type TransactionConfig struct {
+	HardDeleteItems bool
 }
 
 type LoyaltyServiceConfig struct {
@@ -88,6 +93,9 @@ func Load() (*Config, error) {
 		LoyaltyService: LoyaltyServiceConfig{
 			APIURL: os.Getenv("HAIRHAUS_LOYALTY_API_URL"),
 			APIKey: os.Getenv("HAIRHAUS_LOYALTY_API_KEY"),
+		},
+		Transaction: TransactionConfig{
+			HardDeleteItems: getEnv("TXN_HARD_DELETE_ITEMS", "false") == "true",
 		},
 	}
 

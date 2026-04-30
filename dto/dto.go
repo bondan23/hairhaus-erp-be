@@ -69,13 +69,13 @@ type UserResponse struct {
 
 // ===== Product Category =====
 type CreateProductCategoryRequest struct {
-	Name string `json:"name" binding:"required"`
-	Code string `json:"code" binding:"required"`
+	Name       string `json:"name" binding:"required"`
+	IncomeType string `json:"income_type" binding:"required,oneof=HAIRCUT TREATMENT PRODUCT OTHER"`
 }
 
 type UpdateProductCategoryRequest struct {
-	Name *string `json:"name"`
-	Code *string `json:"code"`
+	Name       *string `json:"name"`
+	IncomeType *string `json:"income_type" binding:"omitempty,oneof=HAIRCUT TREATMENT PRODUCT OTHER"`
 }
 
 // ===== Product =====

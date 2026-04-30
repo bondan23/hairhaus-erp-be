@@ -959,8 +959,23 @@ paths:
                   - properties:
                       data:
                         $ref: '#/components/schemas/Transaction'
+    delete:
+      tags: [Transactions]
+      summary: Delete a draft transaction
+      description: |
+        Hard deletes a draft transaction and all its items. Only allowed for DRAFT status.
+        **Roles:** ADMIN, MANAGER, CASHIER
+      parameters:
+        - $ref: '#/components/parameters/ID'
+      responses:
+        '200':
+          description: Draft transaction deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
         '400':
-          description: Validation error or transaction not in draft status
+          description: Not a draft, not found, or validation error
         '404':
           $ref: '#/components/responses/NotFound'
 
@@ -1431,7 +1446,7 @@ paths:
       tags: [Reports]
       summary: Revenue breakdown by income type
       description: |
-        Returns revenue broken down by HAIRCUT, TREATMENT, and PRODUCT income streams.
+        Returns revenue broken down by HAIRCUT, TREATMENT, PRODUCT, and OTHER income streams.
         **Roles:** ADMIN, MANAGER
       parameters:
         - name: branch_id
@@ -1471,6 +1486,9 @@ paths:
                             type: integer
                             format: int64
                           PRODUCT:
+                            type: integer
+                            format: int64
+                          OTHER:
                             type: integer
                             format: int64
 
@@ -1742,22 +1760,24 @@ components:
     # ---- Product Category ----
     CreateProductCategoryRequest:
       type: object
-      required: [name, code]
+      required: [name, income_type]
       properties:
         name:
           type: string
           example: "Haircut"
-        code:
+        income_type:
           type: string
-          example: "Haircut"
+          enum: [HAIRCUT, TREATMENT, PRODUCT, OTHER]
+          example: "HAIRCUT"
 
     UpdateProductCategoryRequest:
       type: object
       properties:
         name:
           type: string
-        code:
+        income_type:
           type: string
+          enum: [HAIRCUT, TREATMENT, PRODUCT, OTHER]
 
     # ---- Product ----
     CreateProductRequest:
@@ -2352,7 +2372,8 @@ components:
           type: string
         income_type_snapshot:
           type: string
-          enum: [HAIRCUT, TREATMENT, PRODUCT]
+          description: "Dynamic based on Product Category"
+          enum: [HAIRCUT, TREATMENT, PRODUCT, OTHER]
         stylist_name_snapshot:
           type: string
         price_snapshot:

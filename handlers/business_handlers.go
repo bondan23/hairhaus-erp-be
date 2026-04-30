@@ -122,6 +122,20 @@ func (h *TransactionHandler) Save(c *gin.Context) {
 	utils.RespondCreated(c, "Transaction saved as draft", txn)
 }
 
+func (h *TransactionHandler) DeleteDraft(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		utils.RespondValidationError(c, "Invalid draft ID")
+		return
+	}
+
+	if err := h.service.DeleteDraftTransaction(id); err != nil {
+		utils.RespondError(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	utils.RespondSuccess(c, "Draft transaction deleted", nil)
+}
+
 func (h *TransactionHandler) EditDraft(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {

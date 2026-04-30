@@ -6,6 +6,7 @@ const (
 	IncomeTypeHaircut   = "HAIRCUT"
 	IncomeTypeTreatment = "TREATMENT"
 	IncomeTypeProduct   = "PRODUCT"
+	IncomeTypeOther     = "OTHER"
 )
 
 // TransactionItem represents a line item in a transaction with snapshot fields.
@@ -24,7 +25,7 @@ type TransactionItem struct {
 	ProductNameSnapshot  string `gorm:"not null" json:"product_name_snapshot"`
 	ProductTypeSnapshot  string `gorm:"not null" json:"product_type_snapshot"`
 	CategoryNameSnapshot string `gorm:"not null" json:"category_name_snapshot"`
-	IncomeTypeSnapshot   string `gorm:"not null" json:"income_type_snapshot"` // HAIRCUT | TREATMENT | PRODUCT
+	IncomeTypeSnapshot   string `gorm:"not null" json:"income_type_snapshot"` // Dynamic based on Product Category
 	StylistNameSnapshot  string `json:"stylist_name_snapshot"`
 
 	PriceSnapshot int64 `gorm:"not null" json:"price_snapshot"`

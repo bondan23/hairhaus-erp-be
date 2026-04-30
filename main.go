@@ -80,9 +80,19 @@ func main() {
 	customerService := services.NewCustomerService(customerRepo)
 	cashDrawerService := services.NewCashDrawerService(cashDrawerRepo, transactionRepo, auditLogRepo)
 	transactionService := services.NewTransactionService(
-		transactionRepo, branchRepo, branchProductRepo, branchStylistRepo,
-		productRepo, stylistRepo, cashDrawerRepo, affiliateRepo,
-		affiliateCommRepo, stockMovementRepo, auditLogRepo, customerRepo, loyaltyClient,
+		transactionRepo,
+		branchRepo,
+		branchProductRepo,
+		branchStylistRepo,
+		productRepo,
+		stylistRepo,
+		cashDrawerRepo,
+		affiliateRepo,
+		affiliateCommRepo,
+		stockMovementRepo,
+		auditLogRepo,
+		customerRepo,
+		loyaltyClient,
 	)
 	inventoryService := services.NewInventoryService(branchProductRepo, stockMovementRepo)
 	affiliateService := services.NewAffiliateService(affiliateRepo, affiliateCommRepo)
